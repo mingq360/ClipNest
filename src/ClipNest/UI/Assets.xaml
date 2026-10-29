@@ -1,0 +1,44 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 占位图标：巢 + 一片纸。等正式设计稿替换。 -->
+    <DrawingImage x:Key="AppIconImage">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#2C7A6B">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,32,32" RadiusX="8" RadiusY="8" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+
+                <!-- 一片被收进巢里的片段 -->
+                <GeometryDrawing Brush="#FFFFFF">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="11,5.5,10,8.5" RadiusX="1.5" RadiusY="1.5" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+
+                <!-- 巢的枝条 -->
+                <GeometryDrawing Geometry="M5.5,15.5 L26.5,15.5">
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#FFFFFF" Thickness="2" StartLineCap="Round" EndLineCap="Round" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+
+                <!-- 巢的碗形 -->
+                <GeometryDrawing Geometry="M5.5,15.5 A10.5,10.5 0 0 0 26.5,15.5">
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#FFFFFF" Thickness="2.6" StartLineCap="Round" EndLineCap="Round" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+
+                <GeometryDrawing Geometry="M9,19.5 L23,19.5">
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#A6FFFFFF" Thickness="1.4" StartLineCap="Round" EndLineCap="Round" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+</ResourceDictionary>

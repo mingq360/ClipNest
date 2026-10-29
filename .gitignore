@@ -1,0 +1,22 @@
+## Build outputs
+bin/
+obj/
+artifacts/
+*.user
+*.suo
+.vs/
+
+## Runtime data (should never be committed)
+*.db
+*.db-wal
+*.db-shm
+logs/
+settings.json
+
+## 本地工具状态（WorkBuddy 工作记录），不进仓库
+.workbuddy/
+
+## OS
+Thumbs.db
+desktop.ini
+.DS_Store
