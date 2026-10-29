@@ -174,13 +174,14 @@ docs/                需求文档与方案设计文档
 都不用装，拷到 U 盘就能跑。
 
 ```powershell
-.\publish.ps1 -FrameworkDependent   # 约 3 MB，但要求目标机器装了 .NET 8 桌面运行时
+.\publish.ps1 -FrameworkDependent   # → artifacts/publish/win-x64-fdd/（约 2.9 MB，需 .NET 8 桌面运行时）
 .\publish.ps1 -Runtime win-arm64    # ARM64 设备
 ```
 
 两点说明：
 
-- **不做裁剪**。WPF 不支持 `PublishTrimmed`（会破坏 XAML 反射），体积靠单文件压缩压下来。
+- **不做裁剪**。WPF 不支持 `PublishTrimmed`（会破坏 XAML 反射），体积靠单文件压缩压下来；
+  而**压缩只对自包含生效**，框架依赖模式加上会报 `NETSDK1176`。
 - **原生库首次运行会解压**（`IncludeNativeLibrariesForSelfExtract`），因为 SQLite 的
   `e_sqlite3.dll` 无法直接从单文件包内加载。解压到 `%TEMP%\.net\ClipNest\…`，后续启动复用。
 

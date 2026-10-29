@@ -17,9 +17,12 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $project = Join-Path $root "src/ClipNest/ClipNest.csproj"
-$output = Join-Path $root "artifacts/publish/$Runtime"
 
-# WPF 不支持 PublishTrimmed，所以别加裁剪参数；单文件靠压缩把体积压下来
+# 两种模式分目录输出，免得打包其中一个时把另一个删掉
+$suffix = if ($FrameworkDependent) { "$Runtime-fdd" } else { $Runtime }
+$output = Join-Path $root "artifacts/publish/$suffix"
+
+# WPF 不支持 PublishTrimmed，所以别加裁剪参数
 $publishArgs = @(
     "publish", $project,
     "-c", "Release",
@@ -27,11 +30,15 @@ $publishArgs = @(
     "--self-contained", (-not $FrameworkDependent).ToString().ToLowerInvariant(),
     "-p:PublishSingleFile=true",
     "-p:IncludeNativeLibrariesForSelfExtract=true",
-    "-p:EnableCompressionInSingleFile=true",
     "-p:DebugType=none",
     "-o", $output,
     "--nologo"
 )
+
+# 单文件压缩只对自包含生效，框架依赖模式加上会报 NETSDK1176
+if (-not $FrameworkDependent) {
+    $publishArgs += "-p:EnableCompressionInSingleFile=true"
+}
 
 Write-Host "打包中：$Runtime（$(if ($FrameworkDependent) { '框架依赖' } else { '自包含' })）" -ForegroundColor Cyan
 

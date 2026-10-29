@@ -185,14 +185,15 @@ Produces **one file**: `artifacts/publish/win-x64/ClipNest.exe` (~65 MB). Self-c
 on any Windows 10/11 machine with nothing installed — copy it to a USB stick and it works.
 
 ```powershell
-.\publish.ps1 -FrameworkDependent   # ~3 MB, needs the .NET 8 Desktop Runtime
-.\publish.ps1 -Runtime win-arm64    # for ARM64 devices
+.\publish.ps1 -FrameworkDependent   # → artifacts/publish/win-x64-fdd/  (~2.9 MB, needs .NET 8 Desktop Runtime)
+.\publish.ps1 -Runtime win-arm64    # ARM64 devices
 ```
 
 Two notes on the build:
 
 - **No trimming.** `PublishTrimmed` is not supported for WPF — it breaks XAML reflection. Size comes
-  from single-file compression instead.
+  from single-file compression instead, and **that compression only applies to self-contained
+  builds** (framework-dependent + compression fails with `NETSDK1176`).
 - **Native libraries are extracted at first run** (`IncludeNativeLibrariesForSelfExtract`), because
   SQLite's `e_sqlite3.dll` cannot be loaded from inside the bundle. They land in
   `%TEMP%\.net\ClipNest\…` and are reused on later launches.
