@@ -11,6 +11,7 @@
         ResizeMode="NoResize"
         AllowsTransparency="True"
         ShowInTaskbar="False"
+        ShowActivated="False"
         Topmost="True"
         WindowStartupLocation="Manual"
         Background="Transparent"

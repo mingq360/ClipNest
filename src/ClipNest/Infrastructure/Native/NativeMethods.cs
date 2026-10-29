@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using ClipNest.Infrastructure.Diagnostics;
@@ -97,6 +98,128 @@ internal static class NativeMethods
         return pid;
     }
 
+    // ---------------------------------------------------------------- 焦点
+
+    /// <summary>当前线程/前台里真正拿到键盘焦点的那个窗口（通常是一个子控件，不是顶层窗口）。</summary>
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetFocus();
+
+    /// <summary>把键盘焦点交给指定窗口；跨线程前需要 AttachThreadInput。</summary>
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetFocus(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
+
+    // （VkControl / VkV 已在本文件「模拟按键」段定义，这里不重复声明）
+    public const int VkMenu = 0x12;
+    public const int VkShift = 0x10;
+    public const int VkLWin = 0x5B;
+    public const int VkRWin = 0x5C;
+    public const int VkSpace = 0x20;
+    public const int VkEscape = 0x1B;
+    public const int VkReturn = 0x0D;
+    public const int VkUp = 0x26;
+    public const int VkDown = 0x28;
+    public const int VkBack = 0x08;
+
+    /// <summary>判断当前是否有 Ctrl/Alt/Win 之类的修饰键按下（用于把快捷键和真正的输入区分开）。</summary>
+    public static bool IsModifierHeld()
+    {
+        const short down = unchecked((short)0x8000);
+
+        return (GetAsyncKeyState(VkControl) & down) != 0
+            || (GetAsyncKeyState(VkMenu) & down) != 0
+            || (GetAsyncKeyState(VkLWin) & down) != 0
+            || (GetAsyncKeyState(VkRWin) & down) != 0;
+    }
+
+    public static bool IsShiftHeld() => (GetAsyncKeyState(VkShift) & unchecked((short)0x8000)) != 0;
+
+    // ---------------------------------------------------------------- 窗口扩展样式
+
+    public const int GwlExStyle = -20;
+
+    /// <summary>显示但不抢焦点：点了也不激活，前台窗口一动不动。</summary>
+    public const long WsExNoActivate = 0x08000000L;
+
+    /// <summary>从 Alt+Tab 列表里隐藏，弹出式菜单都该有。</summary>
+    public const long WsExToolWindow = 0x00000080L;
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
+    public static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int nIndex);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
+    public static extern IntPtr SetWindowLongPtr(IntPtr hwnd, int nIndex, IntPtr dwNewLong);
+
+    /// <summary>在样式上按位加/去某一位，返回设置后的值。</summary>
+    public static long ModifyExStyle(IntPtr hwnd, long add, long remove = 0)
+    {
+        if (hwnd == IntPtr.Zero) return 0;
+
+        var current = GetWindowLongPtr(hwnd, GwlExStyle).ToInt64();
+        var next = (current | add) & ~remove;
+
+        if (next == current) return current;
+
+        _ = SetWindowLongPtr(hwnd, GwlExStyle, new IntPtr(next));
+        return next;
+    }
+
+    // ---------------------------------------------------------------- 窗口消息
+
+    public const int WmMouseActivate = 0x0021;
+    public const int WmNcActivate = 0x0086;
+
+    /// <summary>WM_MOUSEACTIVATE 的返回值：别激活我，也别把焦点拿走。</summary>
+    public const int MaNoActivate = 3;
+
+    public const int WmKeyDown = 0x0100;
+    public const int WmSysKeyDown = 0x0104;
+    public const int WmLButtonDown = 0x0201;
+    public const int WmRButtonDown = 0x0204;
+
+    // ---------------------------------------------------------------- 低层钩子
+
+    public const int WhKeyboardLl = 13;
+    public const int WhMouseLl = 14;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct KBDLLHOOKSTRUCT
+    {
+        public uint vkCode;
+        public uint scanCode;
+        public uint flags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MSLLHOOKSTRUCT
+    {
+        public POINT pt;
+        public uint mouseData;
+        public uint flags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    public delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+    /// <summary>
+    /// 装低层钩子（WH_KEYBOARD_LL / WH_MOUSE_LL）。
+    /// 这两个钩子是全局的，<b>不用时必须 UnhookWindowsHookEx</b>，否则会一直拖慢系统输入。
+    /// </summary>
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
     // ---------------------------------------------------------------- 模拟按键
 
     private const uint InputKeyboard = 1;
@@ -164,6 +287,28 @@ internal static class NativeMethods
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// 补发一次按键（可带 Shift）。
+    /// 用途：无激活弹窗在用户敲下第一个字符时才接管键盘，
+    /// 那个"触发键"需要原样交还给搜索框，否则用户会丢掉第一个字。
+    /// 调用前务必确认自己已经是前台窗口，否则按键会打进别人的文档里。
+    /// </summary>
+    public static bool SendKeyStroke(ushort vk, bool shift)
+    {
+        var inputs = new List<INPUT>();
+        if (shift) inputs.Add(MakeKey((ushort)VkShift, 0));
+
+        inputs.Add(MakeKey(vk, 0));
+        inputs.Add(MakeKey(vk, KeyEventKeyUp));
+
+        if (shift) inputs.Add(MakeKey((ushort)VkShift, KeyEventKeyUp));
+
+        var array = inputs.ToArray();
+        var sent = SendInput((uint)array.Length, array, Marshal.SizeOf<INPUT>());
+
+        return sent == (uint)array.Length;
     }
 
     private static INPUT MakeKey(ushort virtualKey, uint flags) => new()

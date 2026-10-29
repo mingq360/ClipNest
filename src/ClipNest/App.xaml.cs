@@ -294,17 +294,21 @@ public partial class App : Application
 
         if (_pastePopup is not null)
         {
-            _pastePopup.Activate();
+            _pastePopup.BringToFront();
             return;
         }
 
-        // 必须在弹窗之前取：弹窗会抢走前台
+        // 必须在弹窗之前取：弹窗会抢走前台。
+        // 除了顶层窗口，还要记住真正拿着键盘焦点的那个子控件，退出时才能精确还回去
         var target = NativeMethods.GetForegroundWindow();
         if (target == IntPtr.Zero) target = _foregroundTracker?.Current.Handle ?? IntPtr.Zero;
 
-        Log.Info($"打开历史菜单，目标窗口=0x{target.ToInt64():X}（{NativeMethods.GetProcessName(target) ?? "?"}）");
+        var focused = NativeMethods.GetFocus();
+        var targetThread = target == IntPtr.Zero ? 0u : NativeMethods.GetWindowThreadProcessId(target, out _);
 
-        var popup = new PastePopupWindow(_repository, target);
+        Log.Info($"打开历史菜单，目标窗口=0x{target.ToInt64():X}（{NativeMethods.GetProcessName(target) ?? "?"}），焦点控件=0x{focused.ToInt64():X}");
+
+        var popup = new PastePopupWindow(_repository, target, focused, targetThread);
         _pastePopup = popup;
         popup.Closed += (_, _) =>
         {
