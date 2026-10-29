@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using ClipNest.Infrastructure.Diagnostics;
 
 namespace ClipNest.Infrastructure.Native;
 
@@ -46,6 +47,45 @@ internal static class NativeMethods
     public static extern bool SetForegroundWindow(IntPtr hwnd);
 
     [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("kernel32.dll")]
+    public static extern uint GetCurrentThreadId();
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, [MarshalAs(UnmanagedType.Bool)] bool attach);
+
+    /// <summary>
+    /// 把指定窗口切到前台。
+    ///
+    /// 直接调 <see cref="SetForegroundWindow"/> 经常会被系统的前台锁拒绝（返回 false），
+    /// 所以失败时把本线程的输入队列挂到目标线程上再抢一次 —— 这是跨进程夺焦点的标准做法。
+    /// </summary>
+    public static bool TryActivateWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero || !IsWindow(hwnd)) return false;
+        if (GetForegroundWindow() == hwnd) return true;
+
+        if (SetForegroundWindow(hwnd)) return true;
+
+        var targetThread = GetWindowThreadProcessId(hwnd, out _);
+        var ourThread = GetCurrentThreadId();
+        if (targetThread == 0 || targetThread == ourThread) return false;
+
+        var attached = false;
+        try
+        {
+            attached = AttachThreadInput(ourThread, targetThread, true);
+            return SetForegroundWindow(hwnd);
+        }
+        finally
+        {
+            if (attached) AttachThreadInput(ourThread, targetThread, false);
+        }
+    }
+
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsWindow(IntPtr hwnd);
 
@@ -74,11 +114,29 @@ internal static class NativeMethods
         public IntPtr dwExtraInfo;
     }
 
+    /// <summary>
+    /// 只为占位：INPUT 里的 union 有多大由它决定（x64 为 32 字节）。
+    /// 少了它，INPUT 会被排成 32 字节而不是 40，SendInput 会直接返回 0 什么都不发。
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
+    private struct MOUSEINPUT
+    {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
     private struct INPUT
     {
-        public uint type;
-        public KEYBDINPUT ki;
+        [FieldOffset(0)] public uint type;
+
+        // 两个分支从同一偏移开始重叠，和 C 里的 union 一致
+        [FieldOffset(8)] public MOUSEINPUT mi;
+        [FieldOffset(8)] public KEYBDINPUT ki;
     }
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -98,7 +156,14 @@ internal static class NativeMethods
             MakeKey(VkControl, KeyEventKeyUp),
         };
 
-        return SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>()) == inputs.Length;
+        var sent = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+        if (sent != inputs.Length)
+        {
+            Log.Warn($"SendInput 只送出 {sent}/{inputs.Length} 个事件，错误码 {Marshal.GetLastWin32Error()}");
+            return false;
+        }
+
+        return true;
     }
 
     private static INPUT MakeKey(ushort virtualKey, uint flags) => new()
@@ -113,9 +178,6 @@ internal static class NativeMethods
             dwExtraInfo = IntPtr.Zero,
         },
     };
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);

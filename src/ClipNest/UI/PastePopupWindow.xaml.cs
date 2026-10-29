@@ -190,20 +190,14 @@ public partial class PastePopupWindow : Window
         if (row is null) return;
 
         _closing = true;
-
         var content = row.Content;
-
-        // 先让出前台，再把焦点还给原来的窗口，否则 Ctrl+V 会打进我们自己
-        Hide();
 
         if (!ClipboardWriter.TrySetText(content))
         {
-            Log.Warn("写入剪贴板失败，已取消粘贴");
-            Cancel();
+            Log.Warn("写入剪贴板失败，未粘贴");
+            Close();
             return;
         }
-
-        MarkUsed(row);
 
         try
         {
@@ -219,13 +213,34 @@ public partial class PastePopupWindow : Window
             }
             else
             {
-                _ = NativeMethods.SetForegroundWindow(_targetWindow);
+                // 顺序很关键：**趁自己还是前台**先把焦点还回去。
+                // 先 Hide 再 SetForegroundWindow 会被系统的前台锁拒绝，
+                // 结果按键发出去但落在没人接的地方。
+                var activated = NativeMethods.TryActivateWindow(_targetWindow);
+                Log.Info($"切回目标窗口 {DescribeWindow(_targetWindow)}：{(activated ? "成功" : "失败")}");
 
-                // 给目标窗口一点时间真正拿到焦点，否则按键会丢
-                await Task.Delay(90);
-                if (!NativeMethods.SendCtrlV())
+                Hide();
+
+                if (!activated)
                 {
-                    Log.Warn("模拟 Ctrl+V 失败，内容已放进剪贴板，可手动粘贴");
+                    Log.Warn("未能切回目标窗口，内容已放进剪贴板，请手动粘贴");
+                }
+                else
+                {
+                    // 等焦点真正落定，太短会把按键丢在切换途中
+                    await Task.Delay(120);
+
+                    if (NativeMethods.GetForegroundWindow() != _targetWindow)
+                    {
+                        // 有些程序切前台是异步的（先激活框、再激活子控件），再给一次机会
+                        Log.Warn($"前台仍是 {DescribeWindow(NativeMethods.GetForegroundWindow())}，重试一次切回");
+                        _ = NativeMethods.TryActivateWindow(_targetWindow);
+                        await Task.Delay(120);
+                    }
+
+                    var foreground = NativeMethods.GetForegroundWindow();
+                    var sent = NativeMethods.SendCtrlV();
+                    Log.Info($"发送 Ctrl+V：{(sent ? "已发送" : "失败")}，发送时前台={DescribeWindow(foreground)}");
                 }
             }
         }
@@ -234,8 +249,21 @@ public partial class PastePopupWindow : Window
             Log.Error("粘贴失败", ex);
         }
 
+        MarkUsed(row);
+
         Pasted?.Invoke(this, EventArgs.Empty);
         Close();
+    }
+
+    private static string DescribeWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return "0x0";
+
+        var process = NativeMethods.GetProcessName(hwnd) ?? "?";
+        var title = NativeMethods.GetWindowTitle(hwnd);
+        if (title.Length > 24) title = title[..24] + "…";
+
+        return $"0x{hwnd.ToInt64():X}({process} / {title})";
     }
 
     /// <summary>用过的记录刷新时间，下次排到前面。</summary>

@@ -295,6 +295,8 @@ public partial class App : Application
         var target = NativeMethods.GetForegroundWindow();
         if (target == IntPtr.Zero) target = _foregroundTracker?.Current.Handle ?? IntPtr.Zero;
 
+        Log.Info($"打开历史菜单，目标窗口=0x{target.ToInt64():X}（{NativeMethods.GetProcessName(target) ?? "?"}）");
+
         var popup = new PastePopupWindow(_repository, target);
         _pastePopup = popup;
         popup.Closed += (_, _) =>
