@@ -18,7 +18,7 @@ public sealed class HotKeySettings
 
     public bool ManualCaptureEnabled { get; set; } = true;
 
-    public string ManualCapture { get; set; } = "Ctrl+Alt+C";
+    public string ManualCapture { get; set; } = "Alt+C";
 }
 
 /// <summary>settings.json 的形态。所有字段都要有安全默认值，文件损坏时能直接回退。</summary>
@@ -30,7 +30,7 @@ public sealed class AppSettings
     /// <summary>总开关。</summary>
     public bool EnableMonitor { get; set; } = true;
 
-    /// <summary>仅手动收藏才入库（Ctrl+Alt+C 主动收录）。</summary>
+    /// <summary>仅手动收藏才入库（Alt+C 主动收录）。</summary>
     public bool ManualOnly { get; set; }
 
     /// <summary>容量上限，超过后按时间从旧到新清理非置顶/非收藏条目。</summary>
@@ -40,15 +40,20 @@ public sealed class AppSettings
     public int MaxContentChars { get; set; } = 200_000;
 
     /// <summary>主窗口失去焦点时自动隐藏。</summary>
-    public bool HideOnLostFocus { get; set; } = true;
+    public bool HideOnLostFocus { get; set; }
 
-    public bool AutoStart { get; set; }
+    /// <summary>开机自动启动。</summary>
+    public bool AutoStart { get; set; } = true;
 
     public bool FirstRunCompleted { get; set; }
 
     /// <summary>浅色 / 深色 / 跟随系统。默认浅色。</summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ThemeMode Theme { get; set; } = ThemeMode.Light;
+
+    /// <summary>界面语言。默认中文。</summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public Language Language { get; set; } = Language.Chinese;
 
     /// <summary>主题色标识（见 UI.Theming.AccentPalettes）。默认青绿。</summary>
     public string AccentColor { get; set; } = "Teal";
@@ -88,6 +93,7 @@ public sealed class AppSettings
 
         // 手工改过 settings.json 或旧版本文件里没有这两个字段时的兜底
         if (!Enum.IsDefined(Theme)) Theme = ThemeMode.Light;
+        if (!Enum.IsDefined(Language)) Language = Language.Chinese;
         if (string.IsNullOrWhiteSpace(AccentColor)) AccentColor = "Teal";
     }
 

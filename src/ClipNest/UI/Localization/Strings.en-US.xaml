@@ -1,0 +1,180 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ============ Common ============ -->
+    <s:String x:Key="Str_AppName">ClipNest</s:String>
+    <s:String x:Key="Str_CloseHint">Close (Esc)</s:String>
+
+    <!-- ============ Settings window ============ -->
+    <s:String x:Key="Str_SettingsTitle">ClipNest Settings</s:String>
+    <s:String x:Key="Str_Settings">Settings</s:String>
+    <s:String x:Key="Str_SettingsFirstRun">Initial Setup</s:String>
+
+    <s:String x:Key="Str_WelcomeHeading">Two things first</s:String>
+    <s:String x:Key="Str_WelcomeText">Choose the hotkey that opens the window (Hotkeys tab), and which apps to ignore (Privacy tab). You can change everything else later.</s:String>
+
+    <s:String x:Key="Str_TabCapture">Capture</s:String>
+    <s:String x:Key="Str_TabPrivacy">Privacy</s:String>
+    <s:String x:Key="Str_TabHotkeys">Hotkeys</s:String>
+    <s:String x:Key="Str_TabAppearance">Appearance</s:String>
+    <s:String x:Key="Str_TabOther">Other</s:String>
+
+    <!-- Capture -->
+    <s:String x:Key="Str_EnableMonitor">Enable clipboard monitoring</s:String>
+    <s:String x:Key="Str_EnableMonitorHelp">When off, capturing stops completely — same as pausing.</s:String>
+    <s:String x:Key="Str_ManualOnly">Manual favorites only</s:String>
+    <s:String x:Key="Str_ManualOnlyHelp">When on, ordinary copies are ignored; only the “paste picker” shortcut captures what's on the clipboard.</s:String>
+    <s:String x:Key="Str_Capacity">Capacity</s:String>
+    <s:String x:Key="Str_MaxItems">Keep at most</s:String>
+    <s:String x:Key="Str_Items">items</s:String>
+    <s:String x:Key="Str_MaxItemsHelp">Older, unprotected clips are trimmed automatically. Pinned and favorited clips are never trimmed, so their count can exceed this limit.</s:String>
+    <s:String x:Key="Str_MaxCharsLabel">Max per item</s:String>
+    <s:String x:Key="Str_Chars">characters</s:String>
+    <s:String x:Key="Str_MaxCharsHelp">Very long copies (e.g. a whole log) are truncated to keep the index small.</s:String>
+
+    <!-- Privacy -->
+    <s:String x:Key="Str_ExcludedApps">Ignore these apps</s:String>
+    <s:String x:Key="Str_ExcludedAppsHint">One process name per line</s:String>
+    <s:String x:Key="Str_ExcludedAppsHelp">Either “1password” or “1password.exe” works; case is ignored. Note: this only distinguishes apps, not web-based password managers opened in a browser — for those, use “Pause capturing”.</s:String>
+
+    <!-- Hotkeys -->
+    <s:String x:Key="Str_GlobalHotkeys">Global hotkeys</s:String>
+    <s:String x:Key="Str_MainWindowLabel">Main window</s:String>
+    <s:String x:Key="Str_PickerLabel">History picker</s:String>
+    <s:String x:Key="Str_Enable">Enabled</s:String>
+    <s:String x:Key="Str_HotkeysHelp">Opens the history menu; pick an item to paste it into the field you were just using. Global hotkeys are exclusive — once registered, other apps won't receive the same combo locally. Pick another combo if it conflicts.</s:String>
+
+    <!-- Appearance -->
+    <s:String x:Key="Str_ThemeMode">Theme mode</s:String>
+    <s:String x:Key="Str_ThemeLight">Light</s:String>
+    <s:String x:Key="Str_ThemeDark">Dark</s:String>
+    <s:String x:Key="Str_ThemeSystem">System</s:String>
+    <s:String x:Key="Str_ThemeModeHelp">Light by default. “System” follows Windows light/dark; the window switches instantly when the OS changes.</s:String>
+    <s:String x:Key="Str_AccentColor">Accent color</s:String>
+    <s:String x:Key="Str_AccentColorHelp">Used for emphasis, selection and buttons. Applies instantly.</s:String>
+
+    <!-- Other -->
+    <s:String x:Key="Str_StartupWindow">Startup &amp; window</s:String>
+    <s:String x:Key="Str_AutoStart">Start with Windows</s:String>
+    <s:String x:Key="Str_HideOnLostFocus">Auto-hide when losing focus</s:String>
+    <s:String x:Key="Str_Data">Data</s:String>
+    <s:String x:Key="Str_OpenDataFolder">Open data folder</s:String>
+    <s:String x:Key="Str_ClearUnfavorited">Clear unfavorited clips</s:String>
+    <s:String x:Key="Str_DataHelp">Data stays on this machine — never uploaded, never online. This cannot be undone.</s:String>
+
+    <!-- Language -->
+    <s:String x:Key="Str_Language">Language</s:String>
+    <s:String x:Key="Str_LangChinese">中文</s:String>
+    <s:String x:Key="Str_LangEnglish">English</s:String>
+
+    <!-- Settings window errors/notices -->
+    <s:String x:Key="Str_ErrAutoStart">Could not enable auto-start (registry not writable)</s:String>
+    <s:String x:Key="Str_ErrHotkeyToggle">Hotkey for the main window is invalid: {0}</s:String>
+    <s:String x:Key="Str_ErrHotkeyManual">Hotkey for manual capture is invalid: {0}</s:String>
+    <s:String x:Key="Str_ErrHotkeySame">The two hotkeys must be different</s:String>
+    <s:String x:Key="Str_ErrRange">{0} must be an integer between {1} and {2}; reset to {3}</s:String>
+    <s:String x:Key="Str_ErrOpenFolder">Could not open the data folder</s:String>
+    <s:String x:Key="Str_ClearTitle">Clear unfavorited clips</s:String>
+    <s:String x:Key="Str_ClearEmpty">There are no clips right now.</s:String>
+    <s:String x:Key="Str_ClearConfirm">This will delete every clip except pinned and favorited ones — most of the {0} clips may be removed.
+
+This cannot be undone. Continue?</s:String>
+    <s:String x:Key="Str_ClearDone">Deleted {0} clips.</s:String>
+
+    <!-- ============ Main window ============ -->
+    <s:String x:Key="Str_SearchPlaceholder">Search clips…   Press / to focus search</s:String>
+    <s:String x:Key="Str_PinnedTag">Pinned</s:String>
+    <s:String x:Key="Str_EmptyTitle">The nest is empty</s:String>
+    <s:String x:Key="Str_GripTip">Drag to resize the two panes</s:String>
+    <s:String x:Key="Str_Copy">Copy</s:String>
+    <s:String x:Key="Str_Pin">Pin</s:String>
+    <s:String x:Key="Str_Star">Favorite</s:String>
+    <s:String x:Key="Str_Delete">Delete</s:String>
+    <s:String x:Key="Str_Save">Save</s:String>
+    <s:String x:Key="Str_Back">Back</s:String>
+    <s:String x:Key="Str_Forward">Forward</s:String>
+    <s:String x:Key="Str_Source">Source</s:String>
+    <s:String x:Key="Str_NoSelection">Select a clip on the left to preview it</s:String>
+    <s:String x:Key="Str_StatusBar">↑↓ select · Enter copy · Esc hide</s:String>
+    <s:String x:Key="Str_TooltipSettings">Settings</s:String>
+    <s:String x:Key="Str_TooltipAbout">About</s:String>
+    <s:String x:Key="Str_TooltipHide">Hide window (Esc)</s:String>
+    <s:String x:Key="Str_TooltipPause">Pause capturing</s:String>
+    <s:String x:Key="Str_TooltipResume">Resume capturing</s:String>
+
+    <!-- ============ About ============ -->
+    <s:String x:Key="Str_AboutTitle">About ClipNest</s:String>
+    <s:String x:Key="Str_About">About</s:String>
+    <s:String x:Key="Str_Version">Version {0}</s:String>
+    <s:String x:Key="Str_AboutDesc">A local-first clipboard history manager. Copied text stays on your own disk and is always searchable — no cloud, no network, no account.</s:String>
+    <s:String x:Key="Str_Runtime">Runtime</s:String>
+    <s:String x:Key="Str_Storage">Storage</s:String>
+    <s:String x:Key="Str_DataLabel">Data</s:String>
+    <s:String x:Key="Str_License">License</s:String>
+    <s:String x:Key="Str_ViewSource">View source</s:String>
+    <s:String x:Key="Str_Close">Close</s:String>
+    <s:String x:Key="Str_ErrOpenSource">Could not open the GitHub page</s:String>
+
+    <!-- ============ History picker ============ -->
+    <s:String x:Key="Str_PickerTitle">ClipNest History</s:String>
+    <s:String x:Key="Str_SearchHistory">Search history…</s:String>
+    <s:String x:Key="Str_NoMatch">No matching records</s:String>
+    <s:String x:Key="Str_PickerHint">↑↓ select · Enter paste to the previous window · Esc cancel</s:String>
+
+    <!-- ============ Tray ============ -->
+    <s:String x:Key="Str_TrayTooltip">ClipNest · Clipboard history</s:String>
+    <s:String x:Key="Str_TrayTooltipPaused">ClipNest · Capturing paused</s:String>
+    <s:String x:Key="Str_TrayShow">Show ClipNest</s:String>
+    <s:String x:Key="Str_TraySettings">Settings…</s:String>
+    <s:String x:Key="Str_TrayPause">Pause capturing</s:String>
+    <s:String x:Key="Str_TrayResume">Resume capturing</s:String>
+    <s:String x:Key="Str_TrayClear">Clear unfavorited clips…</s:String>
+    <s:String x:Key="Str_TrayExit">Exit</s:String>
+
+    <!-- ============ Hotkey recorder ============ -->
+    <s:String x:Key="Str_HotkeyContinue">Keep holding a key…</s:String>
+    <s:String x:Key="Str_HotkeyNeedModifier">Use Ctrl / Alt / Shift / Win</s:String>
+    <s:String x:Key="Str_HotkeyInvalidKey">This key can't be a hotkey</s:String>
+    <s:String x:Key="Str_HotkeyPress">Press a combo…</s:String>
+    <s:String x:Key="Str_HotkeyClickToRecord">Click to record</s:String>
+
+    <!-- ============ View model (status / filters / hints) ============ -->
+    <s:String x:Key="Str_FilterAll">All types</s:String>
+    <s:String x:Key="Str_FilterText">Text</s:String>
+    <s:String x:Key="Str_FilterLink">Link</s:String>
+    <s:String x:Key="Str_FilterEmail">Email</s:String>
+    <s:String x:Key="Str_FilterNumber">Number</s:String>
+
+    <s:String x:Key="Str_StatusTotal">{0} clips total</s:String>
+    <s:String x:Key="Str_StatusShown">Showing recent {0}</s:String>
+    <s:String x:Key="Str_StatusPaused">Capturing paused</s:String>
+
+    <s:String x:Key="Str_EmptyPaused">Capturing is paused; copies won't be saved yet</s:String>
+    <s:String x:Key="Str_EmptyNone">No clips saved yet. Copy some text to try.</s:String>
+    <s:String x:Key="Str_EmptyNoMatch">No clips contain “{0}”</s:String>
+
+    <s:String x:Key="Str_CopyFailed">Failed to write to clipboard; it may be in use by another app</s:String>
+    <s:String x:Key="Str_ReadFailed">Read failed; see log for details</s:String>
+
+    <s:String x:Key="Str_Saved">Changes saved</s:String>
+    <s:String x:Key="Str_SaveFailed">Save failed; see log for details</s:String>
+
+    <!-- ============ App layer notices ============ -->
+    <s:String x:Key="Str_AppStartFailed">ClipNest failed to start: {0}
+
+See log: {1}</s:String>
+    <s:String x:Key="Str_AppException">Something went wrong: {0}
+
+The app keeps running; see log for details.</s:String>
+    <s:String x:Key="Str_HotkeyRegTitle">Hotkey registration failed</s:String>
+    <s:String x:Key="Str_HotkeyRegHint">
+
+You can change the combo in Settings · Hotkeys.</s:String>
+    <s:String x:Key="Str_TrayClearEmpty">There are no clips right now</s:String>
+    <s:String x:Key="Str_TrayClearConfirm">This will delete all clips that are neither pinned nor favorited (likely most of {0} clips).
+
+This cannot be undone. Continue?</s:String>
+    <s:String x:Key="Str_TrayClearDone">Deleted {0} clips</s:String>
+
+</ResourceDictionary>

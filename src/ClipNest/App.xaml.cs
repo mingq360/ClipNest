@@ -11,6 +11,7 @@ using ClipNest.Infrastructure.HotKey;
 using ClipNest.Infrastructure.Native;
 using ClipNest.Services;
 using ClipNest.UI;
+using ClipNest.UI.Localization;
 using ClipNest.UI.Theming;
 using ClipNest.UI.ViewModels;
 using Microsoft.Data.Sqlite;
@@ -34,6 +35,7 @@ public partial class App : Application
     private SqliteClipRepository? _repository;
     private ClipService? _clipService;
     private ThemeService? _themeService;
+    private LocalizationService? _localization;
 
     private HiddenWindow? _hiddenWindow;
     private ForegroundTracker? _foregroundTracker;
@@ -78,8 +80,8 @@ public partial class App : Application
         {
             Log.Error("启动失败", ex);
             MessageBox.Show(
-                $"ClipNest 启动失败：{ex.Message}\n\n详情见日志：{Path.Combine(Db.DataDirectory, "logs")}",
-                "ClipNest",
+                Loc.Format("Str_AppStartFailed", ex.Message, Path.Combine(Db.DataDirectory, "logs")),
+                Loc.Get("Str_AppName"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 
@@ -100,6 +102,11 @@ public partial class App : Application
         _themeService = new ThemeService(this);
         _themeService.Apply(_settings.Current.Theme, _settings.Current.AccentColor);
 
+        // 字符串资源同理：在窗口创建之前写进 Application.Resources，
+        // 否则 XAML 里的 {DynamicResource Str_xxx} 会一直命中不到资源
+        _localization = new LocalizationService(this);
+        _localization.Apply(_settings.Current.Language);
+
         _db = new Db();
         _db.Initialize();
 
@@ -115,11 +122,11 @@ public partial class App : Application
 
         _hotKeys = new HotKeyManager(_hiddenWindow);
 
-        _viewModel = new MainViewModel(_clipService);
+        _viewModel = new MainViewModel(_clipService, _localization);
         _mainWindow = new MainWindow(_viewModel, _settings);
         _mainWindow.SettingsRequested += (_, _) => OpenSettings(firstRun: false);
 
-        _tray = new TrayIconHost(TryFindResource("AppIconImage") as ImageSource);
+        _tray = new TrayIconHost(TryFindResource("AppIconImage") as ImageSource, _localization);
         _tray.ShowRequested += (_, _) => ShowMainWindow();
         _tray.SettingsRequested += (_, _) => OpenSettings(firstRun: false);
         _tray.PauseToggled += (_, _) => _clipService.TogglePause();
@@ -226,8 +233,8 @@ public partial class App : Application
         if (summary is not null && showDialogOnFailure)
         {
             MessageBox.Show(
-                string.Join("\n", failures) + "\n\n可以到「设置 · 快捷键」里换一个组合键。",
-                "快捷键注册失败",
+                string.Join("\n", failures) + Loc.Get("Str_HotkeyRegHint"),
+                Loc.Get("Str_HotkeyRegTitle"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         }
@@ -326,7 +333,8 @@ public partial class App : Application
 
     private void OpenSettings(bool firstRun)
     {
-        if (_settings is null || _clipService is null || _mainWindow is null || _themeService is null) return;
+        if (_settings is null || _clipService is null || _mainWindow is null
+            || _themeService is null || _localization is null) return;
 
         if (_settingsWindow is not null)
         {
@@ -339,7 +347,7 @@ public partial class App : Application
         {
             // 传一个回调进去：设置窗口每改一项就调它，热键冲突之类的错误直接显示在窗口里
             var window = new SettingsWindow(
-                _settings, _clipService, _themeService, firstRun, ApplyLiveSettings);
+                _settings, _clipService, _themeService, _localization, firstRun, ApplyLiveSettings);
 
             if (_mainWindow.IsVisible) window.Owner = _mainWindow;
 
@@ -363,13 +371,13 @@ public partial class App : Application
         var total = _repository.Count();
         if (total == 0)
         {
-            _tray?.ShowInfo("现在没有任何片段");
+            _tray?.ShowInfo(Loc.Get("Str_TrayClearEmpty"));
             return;
         }
 
         var answer = MessageBox.Show(
-            $"将删除所有「未置顶且未收藏」的片段（共 {total} 条里的大部分）。\n\n此操作不可撤销，确定继续吗？",
-            "清空未收藏的片段",
+            Loc.Format("Str_TrayClearConfirm", total),
+            Loc.Get("Str_ClearTitle"),
             MessageBoxButton.OKCancel,
             MessageBoxImage.Warning,
             MessageBoxResult.Cancel);
@@ -379,7 +387,7 @@ public partial class App : Application
         var removed = _repository.Clear(keepProtected: true);
         Log.Info($"用户从托盘清空了 {removed} 条片段");
         _viewModel?.Reload();
-        _tray?.ShowInfo($"已删除 {removed} 条片段");
+        _tray?.ShowInfo(Loc.Format("Str_TrayClearDone", removed));
     }
 
     // ------------------------------------------------------------ 单实例
@@ -471,8 +479,8 @@ public partial class App : Application
             args.Handled = true;
 
             MessageBox.Show(
-                $"出了点问题：{args.Exception.Message}\n\n程序会继续运行，详情见日志。",
-                "ClipNest",
+                Loc.Format("Str_AppException", args.Exception.Message),
+                Loc.Get("Str_AppName"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         };

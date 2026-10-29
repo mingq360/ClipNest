@@ -28,6 +28,9 @@ public interface IClipRepository
 
     bool SetNote(long id, string? note);
 
+    /// <summary>就地改写某条片段的原文内容（重新计算指纹与时间）。用于详情页编辑后保存。</summary>
+    bool UpdateContent(long id, string content);
+
     bool Delete(long id);
 
     int DeleteMany(IEnumerable<long> ids);

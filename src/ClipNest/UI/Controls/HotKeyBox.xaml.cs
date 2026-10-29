@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ClipNest.Services;
+using ClipNest.UI.Localization;
 
 namespace ClipNest.UI.Controls;
 
@@ -61,7 +62,7 @@ public partial class HotKeyBox : UserControl
         if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt
             or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin)
         {
-            ShowHint("继续按主键…");
+            ShowHint(Loc.Get("Str_HotkeyContinue"));
             e.Handled = true;
             return;
         }
@@ -81,14 +82,14 @@ public partial class HotKeyBox : UserControl
         var modifiers = ToModifiers(Keyboard.Modifiers);
         if (modifiers == 0)
         {
-            ShowHint("需要配合 Ctrl / Alt / Shift / Win");
+            ShowHint(Loc.Get("Str_HotkeyNeedModifier"));
             return;
         }
 
         var virtualKey = KeyInterop.VirtualKeyFromKey(key);
         if (virtualKey == 0)
         {
-            ShowHint("这个按键不能用作快捷键");
+            ShowHint(Loc.Get("Str_HotkeyInvalidKey"));
             return;
         }
 
@@ -124,7 +125,7 @@ public partial class HotKeyBox : UserControl
 
         ValueText.Visibility = Visibility.Collapsed;
         HintText.Visibility = Visibility.Visible;
-        HintText.Text = focused ? "按下组合键…" : "点击后录制";
+        HintText.Text = focused ? Loc.Get("Str_HotkeyPress") : Loc.Get("Str_HotkeyClickToRecord");
     }
 
     private void ShowHint(string message)

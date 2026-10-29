@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using ClipNest.Infrastructure.Data;
 using ClipNest.Infrastructure.Diagnostics;
+using ClipNest.UI.Localization;
 
 namespace ClipNest.UI;
 
@@ -15,7 +16,7 @@ public partial class AboutWindow : Window
     {
         InitializeComponent();
 
-        VersionText.Text = $"版本 {ReadVersion()}";
+        VersionText.Text = Loc.Format("Str_Version", ReadVersion());
         DataPathText.Text = Db.DataDirectory;
 
         KeyDown += (_, e) =>
@@ -47,7 +48,7 @@ public partial class AboutWindow : Window
         }
         catch (Exception ex)
         {
-            Log.Error("打开 GitHub 页面失败", ex);
+            Log.Error(Loc.Get("Str_ErrOpenSource"), ex);
         }
     }
 

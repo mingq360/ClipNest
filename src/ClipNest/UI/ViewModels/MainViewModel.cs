@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using System.Windows.Threading;
 using ClipNest.Domain;
 using ClipNest.Infrastructure.Clipboard;
 using ClipNest.Infrastructure.Diagnostics;
 using ClipNest.Services;
 using ClipNest.UI.Infrastructure;
+using ClipNest.UI.Localization;
 
 namespace ClipNest.UI.ViewModels;
 
@@ -12,32 +14,36 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private const int PageSize = 500;
 
-    private static readonly (string Label, ClipType? Type)[] Filters =
+    private static readonly (string Key, ClipType? Type)[] Filters =
     {
-        ("全部类型", null),
-        ("文本", ClipType.Text),
-        ("链接", ClipType.Link),
-        ("邮箱", ClipType.Email),
-        ("数字", ClipType.Number),
+        ("Str_FilterAll", null),
+        ("Str_FilterText", ClipType.Text),
+        ("Str_FilterLink", ClipType.Link),
+        ("Str_FilterEmail", ClipType.Email),
+        ("Str_FilterNumber", ClipType.Number),
     };
 
     private readonly ClipService _clipService;
     private readonly IClipRepository _repository;
     private readonly DispatcherTimer _searchDebounce;
     private readonly DispatcherTimer _timeTicker;
+    private readonly LocalizationService? _localization;
 
     private string _searchText = string.Empty;
     private int _selectedFilterIndex;
     private ClipRow? _selectedRow;
+    private string _editContent = string.Empty;
+    private bool _isDirty;
     private bool _isPaused;
     private string _statusText = string.Empty;
     private string _emptyHint = string.Empty;
     private string? _notice;
 
-    public MainViewModel(ClipService clipService)
+    public MainViewModel(ClipService clipService, LocalizationService? localization = null)
     {
         _clipService = clipService;
         _repository = clipService.Repository;
+        _localization = localization;
 
         _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
         _searchDebounce.Tick += (_, _) =>
@@ -54,25 +60,38 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         };
         _timeTicker.Start();
 
-        FilterLabels = Filters.Select(f => f.Label).ToArray();
+        RefreshCultureStrings();
 
         CopyCommand = new RelayCommand(CopySelected, () => SelectedRow is not null);
         TogglePinCommand = new RelayCommand(TogglePin, () => SelectedRow is not null);
         ToggleStarCommand = new RelayCommand(ToggleStar, () => SelectedRow is not null);
         DeleteCommand = new RelayCommand(DeleteSelected, () => SelectedRow is not null);
+        DeleteRowCommand = new RelayCommand<ClipRow>(DeleteRow);
         TogglePauseCommand = new RelayCommand(TogglePause);
+        SaveCommand = new RelayCommand(Save, () => IsDirty);
 
         _clipService.ClipSaved += OnClipSaved;
         _clipService.Pruned += OnPruned;
         _clipService.PausedChanged += OnPausedChanged;
         IsPaused = _clipService.IsPaused;
 
+        if (_localization is not null) _localization.Changed += (_, _) => RefreshCultureStrings();
+
         Reload();
+    }
+
+    /// <summary>语言切换时刷新由代码维护的字符串（筛选标签、暂停按钮、状态栏等）。</summary>
+    private void RefreshCultureStrings()
+    {
+        FilterLabels = Filters.Select(f => Loc.Get(f.Key)).ToArray();
+        OnPropertyChanged(nameof(FilterLabels));
+        OnPropertyChanged(nameof(PauseLabel));
+        UpdateStatus();
     }
 
     public ObservableCollection<ClipRow> Items { get; } = new();
 
-    public string[] FilterLabels { get; }
+    public string[] FilterLabels { get; private set; } = Array.Empty<string>();
 
     public RelayCommand CopyCommand { get; }
 
@@ -82,7 +101,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public RelayCommand DeleteCommand { get; }
 
+    /// <summary>列表项上的「按行删除」按钮使用，删除指定行而非当前选中行。</summary>
+    public RelayCommand<ClipRow> DeleteRowCommand { get; }
+
     public RelayCommand TogglePauseCommand { get; }
+
+    /// <summary>详情页「保存」：把编辑后的内容写回该片段，并同步系统剪贴板。</summary>
+    public RelayCommand SaveCommand { get; }
 
     /// <summary>复制完成后请求隐藏窗口（由窗口订阅）。</summary>
     public event EventHandler? HideRequested;
@@ -118,10 +143,37 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             OnPropertyChanged(nameof(SelectedContent));
             OnPropertyChanged(nameof(HasSelection));
+
+            // 载入选中片段的原文作为可编辑副本；切换片段会丢弃未保存的修改
+            EditContent = value?.Content ?? string.Empty;
+            IsDirty = false;
         }
     }
 
     public string SelectedContent => SelectedRow?.Content ?? string.Empty;
+
+    /// <summary>详情页正在编辑的副本。TwoWay 绑定到文本框，保存时才写回。</summary>
+    public string EditContent
+    {
+        get => _editContent;
+        set
+        {
+            if (!SetProperty(ref _editContent, value)) return;
+            UpdateDirty();
+            // 让 SaveCommand 的 CanExecute（依赖 IsDirty）立即刷新
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    /// <summary>当前编辑内容是否与原内容不同（决定是否可保存）。</summary>
+    public bool IsDirty
+    {
+        get => _isDirty;
+        private set => SetProperty(ref _isDirty, value);
+    }
+
+    private void UpdateDirty() =>
+        IsDirty = HasSelection && EditContent != (SelectedRow?.Content ?? string.Empty);
 
     public bool HasSelection => SelectedRow is not null;
 
@@ -134,7 +186,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    public string PauseLabel => IsPaused ? "恢复采集" : "暂停采集";
+    public string PauseLabel => IsPaused ? Loc.Get("Str_TooltipResume") : Loc.Get("Str_TooltipPause");
 
     public string StatusText
     {
@@ -169,7 +221,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         if (!ClipboardWriter.TrySetText(row.Content))
         {
-            StatusText = "写入剪贴板失败，剪贴板可能被其他程序占用";
+            StatusText = Loc.Get("Str_CopyFailed");
             return;
         }
 
@@ -222,6 +274,55 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         UpdateStatus();
     }
 
+    /// <summary>
+    /// 保存详情页的编辑：写回数据库、更新内存模型（复制/张贴立即用新内容），
+    /// 并同步系统剪贴板。写入走 ClipboardWriter，回声抑制会避免被当成新片段重新收录。
+    /// </summary>
+    public void Save()
+    {
+        var row = SelectedRow;
+        if (row is null || !IsDirty) return;
+
+        var newContent = EditContent;
+        try
+        {
+            if (!_repository.UpdateContent(row.Id, newContent))
+            {
+                StatusText = Loc.Get("Str_SaveFailed");
+                return;
+            }
+
+            row.UpdateContent(newContent);
+
+            if (!ClipboardWriter.TrySetText(newContent))
+                Log.Warn("保存后写入剪贴板失败（不影响已入库内容）");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("保存编辑内容失败", ex);
+            StatusText = Loc.Get("Str_SaveFailed");
+            return;
+        }
+
+        IsDirty = false;
+        StatusText = Loc.Get("Str_Saved");
+    }
+
+    /// <summary>列表项「按行删除」：删除指定片段，若恰是当前选中项则重新选定相邻项。</summary>
+    private void DeleteRow(ClipRow? row)
+    {
+        if (row is null) return;
+
+        var index = Items.IndexOf(row);
+        _repository.Delete(row.Id);
+        Items.Remove(row);
+
+        if (ReferenceEquals(SelectedRow, row))
+            SelectedRow = Items.Count == 0 ? null : Items[Math.Clamp(index, 0, Items.Count - 1)];
+
+        UpdateStatus();
+    }
+
     /// <summary>清空，保留置顶与收藏。</summary>
     public int ClearUnprotected()
     {
@@ -249,7 +350,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             Log.Error("查询片段失败", ex);
-            StatusText = "读取失败，详情见日志";
+            StatusText = Loc.Get("Str_ReadFailed");
         }
 
         SelectedRow = keepId is null
@@ -273,16 +374,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             Log.Error("统计片段数量失败", ex);
         }
 
-        var parts = new List<string>(3) { $"共 {total} 条" };
-        if (total > Items.Count && string.IsNullOrEmpty(SearchText)) parts.Add($"已显示最近 {Items.Count} 条");
-        if (IsPaused) parts.Add("采集已暂停");
+        var parts = new List<string>(3) { Loc.Format("Str_StatusTotal", total) };
+        if (total > Items.Count && string.IsNullOrEmpty(SearchText)) parts.Add(Loc.Format("Str_StatusShown", Items.Count));
+        if (IsPaused) parts.Add(Loc.Get("Str_StatusPaused"));
         if (!string.IsNullOrWhiteSpace(Notice)) parts.Add(Notice!);
 
         StatusText = string.Join(" · ", parts);
 
         EmptyHint = string.IsNullOrWhiteSpace(SearchText)
-            ? (IsPaused ? "采集已暂停，复制的内容暂时不会被收录" : "还没有收录任何片段。复制一段文字试试。")
-            : $"没有找到包含「{SearchText.Trim()}」的片段";
+            ? (IsPaused ? Loc.Get("Str_EmptyPaused") : Loc.Get("Str_EmptyNone"))
+            : Loc.Format("Str_EmptyNoMatch", SearchText.Trim());
 
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(HasSelection));

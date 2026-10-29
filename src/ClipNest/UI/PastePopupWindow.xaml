@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:ClipNest.UI.ViewModels"
         xmlns:infra="clr-namespace:ClipNest.UI.Infrastructure"
-        Title="ClipNest 历史"
+        Title="{DynamicResource Str_PickerTitle}"
         Width="436"
         SizeToContent="Height"
         MaxHeight="600"
@@ -82,7 +82,7 @@
                              Height="32" FontSize="13"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              PreviewKeyDown="OnSearchKeyDown" />
-                    <TextBlock Text="搜索历史记录…"
+                    <TextBlock Text="{DynamicResource Str_SearchHistory}"
                                Margin="11,0,0,0"
                                VerticalAlignment="Center"
                                FontSize="13"
@@ -161,7 +161,7 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <TextBlock Text="没有匹配的记录"
+                        <TextBlock Text="{DynamicResource Str_NoMatch}"
                                    FontSize="12"
                                    Foreground="{DynamicResource TextMuted}"
                                    HorizontalAlignment="Center"
@@ -172,7 +172,7 @@
 
                 <!-- 底部提示 -->
                 <Grid Grid.Row="2" Margin="14,9,14,11">
-                    <TextBlock Text="↑↓ 选择 · Enter 粘贴到刚才的窗口 · Esc 取消"
+                    <TextBlock Text="{DynamicResource Str_PickerHint}"
                                FontSize="10.5"
                                Foreground="{DynamicResource TextMuted}"
                                VerticalAlignment="Center" />

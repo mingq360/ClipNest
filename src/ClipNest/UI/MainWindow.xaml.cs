@@ -24,6 +24,7 @@ public partial class MainWindow : Window
         DataContext = viewModel;
 
         _viewModel.HideRequested += (_, _) => HideWindow();
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         PreviewKeyDown += OnWindowPreviewKeyDown;
         Deactivated += OnDeactivated;
@@ -194,6 +195,10 @@ public partial class MainWindow : Window
 
     private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        // 正文可编辑：编辑框内时把按键交给文本框（删除字符、撤销/重做等正常编辑），
+        // 仅 Ctrl+S 特意映射为「保存修改」，与图标按钮保持一致。
+        var contentFocused = ContentBox.IsKeyboardFocusWithin;
+
         if (e.Key == Key.Escape)
         {
             HideWindow();
@@ -205,36 +210,59 @@ public partial class MainWindow : Window
 
         if (Keyboard.Modifiers == ModifierKeys.Control)
         {
-            switch (e.Key)
+            if (e.Key == Key.S && contentFocused)
             {
-                case Key.P:
-                    _viewModel.TogglePin();
-                    e.Handled = true;
-                    return;
-                case Key.S:
-                    _viewModel.ToggleStar();
-                    e.Handled = true;
-                    return;
-                case Key.F:
-                    FocusSearch();
-                    e.Handled = true;
-                    return;
+                if (_viewModel.SaveCommand.CanExecute(null)) _viewModel.SaveCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.P && !contentFocused)
+            {
+                _viewModel.TogglePin();
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.S && !contentFocused)
+            {
+                _viewModel.ToggleStar();
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.F)
+            {
+                FocusSearch();
+                e.Handled = true;
+                return;
             }
         }
 
-        if (e.Key == Key.Delete && !searchFocused)
+        // 编辑框内的 Delete / 斜杠等留给文本框正常输入，不当作删除条目的快捷键
+        if (e.Key == Key.Delete && !searchFocused && !contentFocused)
         {
             _viewModel.DeleteSelected();
             e.Handled = true;
             return;
         }
 
-        // 只有搜索框里没内容时，/ 才当作「回到搜索框」的快捷键
-        if (e.Key == Key.OemQuestion && !searchFocused && string.IsNullOrEmpty(_viewModel.SearchText))
+        // 只有搜索框里没内容、且不在编辑正文时，/ 才当作「回到搜索框」的快捷键
+        if (e.Key == Key.OemQuestion && !searchFocused && !contentFocused && string.IsNullOrEmpty(_viewModel.SearchText))
         {
             FocusSearch();
             e.Handled = true;
         }
+    }
+
+    /// <summary>切换选中片段后清空编辑框的撤销/重做历史，避免对上一片段的撤销误伤当前内容。</summary>
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MainViewModel.SelectedRow)) return;
+
+        // 延迟到 EditContent 的绑定把新内容灌进文本框之后再重置撤销栈
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            ContentBox.IsUndoEnabled = false;
+            ContentBox.IsUndoEnabled = true;
+        }), System.Windows.Threading.DispatcherPriority.Background);
     }
 
     private void MoveSelection(int delta)

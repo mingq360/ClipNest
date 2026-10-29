@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Hardcodet.Wpf.TaskbarNotification;
 using ClipNest.Infrastructure.Diagnostics;
+using ClipNest.UI.Localization;
 
 namespace ClipNest.UI;
 
@@ -11,48 +12,70 @@ public sealed class TrayIconHost : IDisposable
 {
     private readonly TaskbarIcon _icon;
     private readonly MenuItem _pauseItem;
+    private readonly MenuItem _showItem;
+    private readonly MenuItem _settingsItem;
+    private readonly MenuItem _clearItem;
+    private readonly MenuItem _exitItem;
+    private readonly LocalizationService? _localization;
+    private bool _paused;
     private bool _disposed;
 
-    public TrayIconHost(ImageSource? iconSource)
+    public TrayIconHost(ImageSource? iconSource, LocalizationService? localization = null)
     {
+        _localization = localization;
+
         _icon = new TaskbarIcon
         {
-            ToolTipText = "ClipNest · 剪贴板历史",
+            ToolTipText = Loc.Get("Str_TrayTooltip"),
             IconSource = iconSource,
         };
 
-        _pauseItem = new MenuItem { Header = "暂停采集", IsCheckable = true };
+        _pauseItem = new MenuItem { IsCheckable = true };
         _pauseItem.Click += (_, _) => PauseToggled?.Invoke(this, EventArgs.Empty);
 
-        var showItem = new MenuItem { Header = "显示 ClipNest", FontWeight = FontWeights.SemiBold };
-        showItem.Click += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
+        _showItem = new MenuItem { FontWeight = FontWeights.SemiBold };
+        _showItem.Click += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
 
-        var settingsItem = new MenuItem { Header = "设置…" };
-        settingsItem.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
+        _settingsItem = new MenuItem();
+        _settingsItem.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
 
-        var clearItem = new MenuItem { Header = "清空未收藏的片段…" };
-        clearItem.Click += (_, _) => ClearRequested?.Invoke(this, EventArgs.Empty);
+        _clearItem = new MenuItem();
+        _clearItem.Click += (_, _) => ClearRequested?.Invoke(this, EventArgs.Empty);
 
-        var exitItem = new MenuItem { Header = "退出" };
-        exitItem.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
+        _exitItem = new MenuItem();
+        _exitItem.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
 
         _icon.ContextMenu = new ContextMenu
         {
             Items =
             {
-                showItem,
+                _showItem,
                 new Separator(),
                 _pauseItem,
-                settingsItem,
+                _settingsItem,
                 new Separator(),
-                clearItem,
+                _clearItem,
                 new Separator(),
-                exitItem,
+                _exitItem,
             },
         };
 
         _icon.TrayLeftMouseUp += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
         _icon.TrayMouseDoubleClick += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
+
+        RefreshStrings();
+
+        if (_localization is not null) _localization.Changed += (_, _) => RefreshStrings();
+    }
+
+    /// <summary>根据当前语言刷新菜单项文案（菜单是代码里建的，不走 XAML 的 DynamicResource）。</summary>
+    private void RefreshStrings()
+    {
+        _showItem.Header = Loc.Get("Str_TrayShow");
+        _settingsItem.Header = Loc.Get("Str_TraySettings");
+        _clearItem.Header = Loc.Get("Str_TrayClear");
+        _exitItem.Header = Loc.Get("Str_TrayExit");
+        UpdatePaused(_paused);
     }
 
     public event EventHandler? ShowRequested;
@@ -67,13 +90,17 @@ public sealed class TrayIconHost : IDisposable
 
     public void UpdatePaused(bool paused)
     {
+        _paused = paused;
         _pauseItem.IsChecked = paused;
-        _icon.ToolTipText = paused ? "ClipNest · 采集已暂停" : "ClipNest · 剪贴板历史";
+        _pauseItem.Header = Loc.Get(paused ? "Str_TrayResume" : "Str_TrayPause");
+        _icon.ToolTipText = paused ? Loc.Get("Str_TrayTooltipPaused") : Loc.Get("Str_TrayTooltip");
     }
 
-    public void ShowError(string message, string title = "ClipNest") => ShowBalloon(title, message, BalloonIcon.Warning);
+    public void ShowError(string message, string title = "") => ShowBalloon(
+        string.IsNullOrEmpty(title) ? Loc.Get("Str_AppName") : title, message, BalloonIcon.Warning);
 
-    public void ShowInfo(string message, string title = "ClipNest") => ShowBalloon(title, message, BalloonIcon.Info);
+    public void ShowInfo(string message, string title = "") => ShowBalloon(
+        string.IsNullOrEmpty(title) ? Loc.Get("Str_AppName") : title, message, BalloonIcon.Info);
 
     private void ShowBalloon(string title, string message, BalloonIcon icon)
     {

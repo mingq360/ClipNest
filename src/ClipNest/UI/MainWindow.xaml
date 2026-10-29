@@ -5,13 +5,14 @@
         xmlns:vm="clr-namespace:ClipNest.UI.ViewModels"
         xmlns:infra="clr-namespace:ClipNest.UI.Infrastructure"
         Title="ClipNest"
-        Width="705" Height="480"
-        MinWidth="540" MinHeight="340"
+        Width="800" Height="450"
+        MinWidth="560" MinHeight="340"
         WindowStyle="None"
         ResizeMode="CanResize"
+        AllowsTransparency="True"
+        Background="Transparent"
         ShowInTaskbar="False"
         WindowStartupLocation="Manual"
-        Background="{DynamicResource WindowBg}"
         Icon="{StaticResource AppIconImage}"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
@@ -19,9 +20,9 @@
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0"
-                            ResizeBorderThickness="5"
+                            ResizeBorderThickness="6"
                             GlassFrameThickness="0"
-                            CornerRadius="0"
+                            CornerRadius="10"
                             UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
 
@@ -44,6 +45,23 @@
         <Geometry x:Key="InfoIconGeometry">
             M12,2.6 A9.4,9.4 0 1 1 11.99,2.6 M12,11 L12,16.6 M12,7.6 L12,7.7
         </Geometry>
+
+        <!-- 详情页操作图标：复制 / 置顶 / 收藏 / 删除 -->
+        <Geometry x:Key="CopyIconGeometry">M8,8 H18 V18 H8 Z M5,5 H15 V15 H5 Z</Geometry>
+        <Geometry x:Key="PinIconGeometry">M12,4 L12,16 M8,8 L12,4 L16,8 M6,16 H18</Geometry>
+        <Geometry x:Key="StarIconGeometry">M12,3 L14.6,9 L21,9.5 L16,14 L17.5,20.5 L12,17 L6.5,20.5 L8,14 L3,9.5 L9.4,9 Z</Geometry>
+        <Geometry x:Key="DeleteIconGeometry">M5,7 H19 M9,7 V5 H15 V7 M7,7 L8,20 H16 L17,7</Geometry>
+        <!-- 来源：一个地球，表示"来自哪个应用" -->
+        <Geometry x:Key="SourceIconGeometry">M12,4 A8,8 0 1 0 12,20 A8,8 0 1 0 12,4 M12,4 C15,8 15,16 12,20 M12,4 C9,8 9,16 12,20 M4,12 H20</Geometry>
+
+        <!-- 详情页编辑操作：保存 / 后退 / 前进 -->
+        <Geometry x:Key="SaveIconGeometry">M5,4 H14 L19,9 V20 H5 Z M8,4 V9 H15 M8,13 H16 V19 H8 Z</Geometry>
+        <Geometry x:Key="BackIconGeometry">M11,7 L6,12 L11,17 M6,12 H16 A5,5 0 0 1 16,17</Geometry>
+        <Geometry x:Key="ForwardIconGeometry">M13,7 L18,12 L13,17 M18,12 H8 A5,5 0 0 1 8,17</Geometry>
+
+        <!-- 标题栏暂停按钮：运行中=实心圆点，已暂停=双竖条 -->
+        <Geometry x:Key="PauseRunningGeometry">M12,5 A7,7 0 1 0 12,19 A7,7 0 1 0 12,5 Z</Geometry>
+        <Geometry x:Key="PausePausedGeometry">M8,6 H11 V18 H8 Z M13,6 H16 V18 H13 Z</Geometry>
 
         <Style x:Key="ClipItemStyle" TargetType="ListBoxItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -77,7 +95,8 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" CornerRadius="10"
+            Background="{DynamicResource WindowBg}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="38" />
@@ -87,7 +106,7 @@
             </Grid.RowDefinitions>
 
             <!-- ================= 标题栏（自绘，可拖拽） ================= -->
-            <Grid Grid.Row="0" Background="{DynamicResource WindowBg}" MouseLeftButtonDown="OnHeaderMouseDown">
+            <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="OnHeaderMouseDown">
                 <StackPanel Orientation="Horizontal" Margin="13,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
                     <Image Source="{StaticResource AppIconImage}" Width="15" Height="15" RenderOptions.BitmapScalingMode="HighQuality" />
                     <TextBlock Text="ClipNest" Margin="7,0,0,0" FontSize="12.5" FontWeight="SemiBold"
@@ -95,14 +114,27 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,7,0">
+                    <!-- 暂停采集：用图标表达状态（运行中=圆点 / 已暂停=双竖条） -->
                     <Button Command="{Binding TogglePauseCommand}"
                             Style="{StaticResource IconButton}"
                             Width="Auto" Padding="9,0" Margin="0,0,4,0"
                             ToolTip="{Binding PauseLabel}">
-                        <TextBlock Text="{Binding PauseLabel}" FontSize="11.5" VerticalAlignment="Center" />
+                        <Path Width="14" Height="14" Stretch="Uniform"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                            <Path.Style>
+                                <Style TargetType="Path">
+                                    <Setter Property="Data" Value="{StaticResource PauseRunningGeometry}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                            <Setter Property="Data" Value="{StaticResource PausePausedGeometry}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Path.Style>
+                        </Path>
                     </Button>
 
-                    <Button Style="{StaticResource IconButton}" Click="OnSettingsClick" ToolTip="设置">
+                    <Button Style="{StaticResource IconButton}" Click="OnSettingsClick" ToolTip="{DynamicResource Str_TooltipSettings}">
                         <Path Data="{StaticResource SettingsIconGeometry}"
                               Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                               StrokeThickness="1.5"
@@ -112,7 +144,7 @@
                               Stretch="Uniform" />
                     </Button>
 
-                    <Button Style="{StaticResource IconButton}" Click="OnAboutClick" ToolTip="关于">
+                    <Button Style="{StaticResource IconButton}" Click="OnAboutClick" ToolTip="{DynamicResource Str_TooltipAbout}">
                         <Path Data="{StaticResource InfoIconGeometry}"
                               Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                               StrokeThickness="1.6"
@@ -122,7 +154,7 @@
                               Stretch="Uniform" />
                     </Button>
 
-                    <Button Content="✕" Style="{StaticResource IconButton}" Click="OnCloseClick" ToolTip="隐藏窗口 (Esc)" />
+                    <Button Content="✕" Style="{StaticResource IconButton}" Click="OnCloseClick" ToolTip="{DynamicResource Str_TooltipHide}" />
                 </StackPanel>
             </Grid>
 
@@ -139,7 +171,7 @@
                              Height="34" FontSize="13.5"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              PreviewKeyDown="OnSearchBoxKeyDown" />
-                    <TextBlock Text="搜索片段…   按 / 回到搜索框"
+                    <TextBlock Text="{DynamicResource Str_SearchPlaceholder}"
                                Margin="11,0,0,0"
                                VerticalAlignment="Center"
                                FontSize="13.5"
@@ -165,12 +197,12 @@
                           SelectedIndex="{Binding SelectedFilterIndex}" />
             </Grid>
 
-            <!-- ================= 列表 + 预览 ================= -->
+            <!-- ================= 列表 + 预览（左 1 : 右 2） ================= -->
             <Grid Grid.Row="2" Margin="13,0,13,8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.12*" MinWidth="280" />
+                    <ColumnDefinition Width="1*" MinWidth="200" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="1*" MinWidth="220" />
+                    <ColumnDefinition Width="2*" MinWidth="300" />
                 </Grid.ColumnDefinitions>
 
                 <!-- 列表 -->
@@ -204,6 +236,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
                                         <Border Grid.Column="0"
@@ -232,7 +265,7 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBlock Grid.Column="0"
-                                                           Text="置顶"
+                                                           Text="{DynamicResource Str_PinnedTag}"
                                                            FontSize="10"
                                                            Foreground="{DynamicResource Accent}"
                                                            Background="{DynamicResource AccentSoft}"
@@ -269,9 +302,34 @@
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding TimeText}"
                                                    FontSize="10.5"
-                                                   Margin="0,2,2,0"
+                                                   Margin="0,2,4,0"
                                                    VerticalAlignment="Top"
                                                    Foreground="{DynamicResource TextMuted}" />
+
+                                        <!-- 行内删除按钮：悬停或选中时显示（默认折叠放在 Style 里，触发器才能覆盖） -->
+                                        <Button Grid.Column="3"
+                                                Command="{Binding DataContext.DeleteRowCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Width="24" Height="24"
+                                                Margin="0,0,2,0"
+                                                ToolTip="{DynamicResource Str_Delete}">
+                                            <Path Data="{StaticResource DeleteIconGeometry}" Width="14" Height="14" Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -282,7 +340,7 @@
                                     VerticalAlignment="Center"
                                     Margin="24"
                                     Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="巢还是空的"
+                            <TextBlock Text="{DynamicResource Str_EmptyTitle}"
                                        FontSize="14"
                                        Foreground="{DynamicResource TextSecondary}"
                                        HorizontalAlignment="Center" />
@@ -305,7 +363,7 @@
                               ShowsPreview="False"
                               Background="Transparent"
                               Cursor="SizeWE"
-                              ToolTip="拖动可调整左右宽度">
+                              ToolTip="{DynamicResource Str_GripTip}">
                     <GridSplitter.Template>
                         <ControlTemplate TargetType="GridSplitter">
                             <!-- 根元素必须有画刷，否则中间透明区域接不到鼠标 -->
@@ -340,7 +398,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <!-- 元信息 + 操作：分两行，窗口缩窄后不会互相挤压 -->
+                        <!-- 第一排：类型徽标 + 编辑操作（保存/后退/前进）+ 条目操作（复制/置顶/收藏/删除） -->
                         <StackPanel Grid.Row="0" Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -357,9 +415,76 @@
                                            Padding="6,2"
                                            VerticalAlignment="Center" />
 
+                                <!-- 编辑操作：保存 / 后退（撤销）/ 前进（重做） -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                    <Button Style="{StaticResource IconButton}" Width="30" Height="26" Margin="0,0,2,0"
+                                            ToolTip="{DynamicResource Str_Save}" Command="{Binding SaveCommand}">
+                                        <Path Data="{StaticResource SaveIconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Button>
+                                    <Button Style="{StaticResource IconButton}" Width="30" Height="26" Margin="0,0,2,0"
+                                            ToolTip="{DynamicResource Str_Back}"
+                                            Command="{x:Static ApplicationCommands.Undo}"
+                                            CommandTarget="{Binding ElementName=ContentBox}">
+                                        <Path Data="{StaticResource BackIconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Button>
+                                    <Button Style="{StaticResource IconButton}" Width="30" Height="26"
+                                            ToolTip="{DynamicResource Str_Forward}"
+                                            Command="{x:Static ApplicationCommands.Redo}"
+                                            CommandTarget="{Binding ElementName=ContentBox}">
+                                        <Path Data="{StaticResource ForwardIconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Button>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button Style="{StaticResource IconButton}" Width="30" Height="26" Margin="0,0,2,0"
+                                            ToolTip="{DynamicResource Str_Copy}" Command="{Binding CopyCommand}">
+                                        <Path Data="{StaticResource CopyIconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Button>
+                                    <Button Style="{StaticResource IconButton}" Width="30" Height="26" Margin="0,0,2,0"
+                                            ToolTip="{DynamicResource Str_Pin}" Command="{Binding TogglePinCommand}">
+                                        <Path Data="{StaticResource PinIconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Button>
+                                    <Button Style="{StaticResource IconButton}" Width="30" Height="26" Margin="0,0,2,0"
+                                            ToolTip="{DynamicResource Str_Star}" Command="{Binding ToggleStarCommand}">
+                                        <Path Data="{StaticResource StarIconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Button>
+                                    <Button Style="{StaticResource IconButton}" Width="30" Height="26"
+                                            ToolTip="{DynamicResource Str_Delete}" Command="{Binding DeleteCommand}">
+                                        <Path Data="{StaticResource DeleteIconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 第二排：来源（带图标） + 时间 -->
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Path Grid.Column="0" Data="{StaticResource SourceIconGeometry}" Width="13" Height="13"
+                                      Stretch="Uniform"
+                                      Stroke="{DynamicResource TextMuted}" StrokeThickness="1.4"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      VerticalAlignment="Center" Margin="0,0,5,0" />
+
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding SelectedRow.SourceText}"
-                                           Margin="7,0,6,0"
                                            FontSize="11"
                                            TextTrimming="CharacterEllipsis"
                                            Foreground="{DynamicResource TextMuted}"
@@ -368,38 +493,31 @@
                                 <TextBlock Grid.Column="2"
                                            Text="{Binding SelectedRow.TimeText}"
                                            FontSize="11"
+                                           Margin="8,0,0,0"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center" />
                             </Grid>
-
-                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <Button Content="复制" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
-                                        FontSize="11" Margin="0,0,4,0" Command="{Binding CopyCommand}" />
-                                <Button Content="置顶" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
-                                        FontSize="11" Margin="0,0,4,0" Command="{Binding TogglePinCommand}" />
-                                <Button Content="收藏" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
-                                        FontSize="11" Margin="0,0,4,0" Command="{Binding ToggleStarCommand}" />
-                                <Button Content="删除" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
-                                        FontSize="11" Command="{Binding DeleteCommand}" />
-                            </StackPanel>
                         </StackPanel>
 
                         <Border Grid.Row="1" Height="1" Margin="0,10,0,10" Background="{DynamicResource BorderSoft}"
                                 Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}" />
 
-                        <!-- 正文 -->
+                        <!-- 正文（可编辑：修改后点保存写回片段并同步剪贴板） -->
                         <TextBox Grid.Row="2"
-                                 Text="{Binding SelectedContent, Mode=OneWay}"
-                                 IsReadOnly="True"
-                                 IsReadOnlyCaretVisible="False"
-                                 TextWrapping="Wrap"
+                                 x:Name="ContentBox"
+                                 Text="{Binding EditContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  AcceptsReturn="True"
+                                 AcceptsTab="True"
+                                 TextWrapping="Wrap"
+                                 IsUndoEnabled="True"
+                                 UndoLimit="100"
                                  BorderThickness="0"
                                  Background="Transparent"
                                  Padding="0"
                                  FontFamily="{StaticResource FontMono}"
                                  FontSize="12.5"
                                  Foreground="{DynamicResource TextPrimary}"
+                                 CaretBrush="{DynamicResource Accent}"
                                  VerticalScrollBarVisibility="Auto"
                                  HorizontalScrollBarVisibility="Disabled"
                                  Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
@@ -409,7 +527,7 @@
                         </TextBox>
 
                         <TextBlock Grid.Row="2"
-                                   Text="选中左侧任意片段即可预览全文"
+                                   Text="{DynamicResource Str_NoSelection}"
                                    FontSize="12"
                                    Foreground="{DynamicResource TextMuted}"
                                    HorizontalAlignment="Center"
@@ -438,7 +556,7 @@
                            Margin="10,0,0,0"
                            Foreground="{DynamicResource TextMuted}"
                            VerticalAlignment="Center"
-                           Text="↑↓ 选择 · Enter 复制 · Esc 收起" />
+                           Text="{DynamicResource Str_StatusBar}" />
             </Grid>
         </Grid>
     </Border>

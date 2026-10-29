@@ -46,6 +46,10 @@ snippet you copy, and gives it back to you in under a second.
 - **Pick and paste in place** — hit the second hotkey inside any app and a compact picker opens with
   your history. Choose an entry and it is pasted straight into the field you were typing in, no
   switching back to a manager window. This is the CLCL workflow people have missed for years.
+- **Edit a snippet in place** — the detail pane is an editor, not just a preview. Fix a typo or trim a
+  block you copied, then hit **Save** (or `Ctrl+S` while the editor has focus): the history entry, the
+  on-disk record, and the system clipboard are all updated together, and your next paste uses the edited
+  text. **Back / Forward** buttons give you undo / redo while editing.
 - **Pinned and starred entries survive cleanup** — when the store hits its cap, the oldest
   *unprotected* entries go first. Your keepers don't.
 - **Light or dark, in your colour** — light by default, or follow the Windows setting. Six accent
@@ -76,12 +80,12 @@ leave the home row.
 | Key | Action |
 | --- | --- |
 | `Ctrl+Alt+V` | Summon / dismiss the window (configurable) |
-| `Ctrl+Alt+C` | Open the history picker and paste directly into the window you were in |
+| `Alt+C` | Open the history picker and paste directly into the window you were in |
 | `↑` `↓` | Move through results without leaving the search box |
 | `Enter` | Copy the selected snippet and hide |
 | `Ctrl+P` | Pin / unpin |
-| `Ctrl+S` | Star / unstar |
-| `Delete` | Delete the selected snippet |
+| `Ctrl+S` | Star / unstar — **or save the edit when the detail editor has focus** |
+| `Delete` | Delete the selected snippet (edits text normally while the detail editor has focus) |
 | `Esc` | Hide |
 
 ## How it works
@@ -129,6 +133,13 @@ fingerprint of what it just wrote; an identical read within 1.5 s is recognised 
 `INSERT` of 5,000 rows through the triggers: ~136 ms. Release build at rest: 48 MB private bytes,
 128 MB working set (WPF's shared pages account for most of the gap — judge by private bytes).
 
+**A global shortcut that swallowed typing.** The window handles keys in `PreviewKeyDown` (a tunneling
+event), so `Delete` removes the selected entry from anywhere. Once the detail pane became an editable
+TextBox, that same handler started eating `Delete` inside the editor — you couldn't delete a single
+character. The fix keys off `ContentBox.IsKeyboardFocusWithin`: while editing, the window-level
+shortcuts stand down (`Ctrl+S` is deliberately re-mapped to Save instead of Star). Switching rows also
+resets the TextBox undo stack, so undoing an edit on one entry can't bleed into the next.
+
 ## Privacy
 
 ClipNest has no server, no telemetry, no update checker, no crash reporter. You can verify that with
@@ -147,6 +158,7 @@ a firewall rule and watch it make zero connections.
 | --- | --- |
 | Clipboard capture, history, search, copy-back | ✅ working |
 | Pin / star / delete / clear, capacity cleanup | ✅ working |
+| Edit a snippet in place (save / undo / redo) | ✅ working |
 | Tray, global hotkeys, single instance, autostart | ✅ working |
 | Pause, denylist, first-run setup | ✅ working |
 | Tags, source filtering, import/export | ⬜ roadmap |

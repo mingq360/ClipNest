@@ -73,6 +73,15 @@ public sealed class ClipRow : ObservableObject
         OnPropertyChanged(nameof(IsStarred));
     }
 
+    /// <summary>详情页编辑保存后同步原文与派生显示字段（预览、字符数、来源行等）。</summary>
+    public void UpdateContent(string content)
+    {
+        Model.Content = content;
+        OnPropertyChanged(nameof(Content));
+        OnPropertyChanged(nameof(Preview));
+        OnPropertyChanged(nameof(MetaText));
+    }
+
     private static string FormatRelative(DateTimeOffset time)
     {
         var now = DateTimeOffset.Now;

@@ -7,6 +7,7 @@ using ClipNest.Infrastructure.Data;
 using ClipNest.Infrastructure.Diagnostics;
 using ClipNest.Infrastructure.Startup;
 using ClipNest.Services;
+using ClipNest.UI.Localization;
 using ClipNest.UI.Theming;
 
 namespace ClipNest.UI;
@@ -20,6 +21,7 @@ public partial class SettingsWindow : Window
     private readonly SettingsService _settings;
     private readonly ClipService _clipService;
     private readonly ThemeService _themeService;
+    private readonly LocalizationService _localization;
     private readonly Func<string?>? _applyLive;
     private readonly bool _firstRun;
 
@@ -30,6 +32,7 @@ public partial class SettingsWindow : Window
         SettingsService settings,
         ClipService clipService,
         ThemeService themeService,
+        LocalizationService localization,
         bool firstRun,
         Func<string?>? applyLive = null)
     {
@@ -38,14 +41,19 @@ public partial class SettingsWindow : Window
         _settings = settings;
         _clipService = clipService;
         _themeService = themeService;
+        _localization = localization;
         _firstRun = firstRun;
         _applyLive = applyLive;
 
-        TitleText.Text = firstRun ? "初次设置" : "设置";
+        RefreshLocalizedStrings();
         WelcomeCard.Visibility = firstRun ? Visibility.Visible : Visibility.Collapsed;
         HintSwitchTabOnFirstRun(firstRun);
 
         LoadFromSettings();
+        ShowCurrentPage();
+
+        // 语言切换时刷新代码里写死的标题等（XAML 里的 DynamicResource 会自动更新）
+        _localization.Changed += (_, _) => RefreshLocalizedStrings();
 
         // 用 KeyDown（冒泡）而不是 PreviewKeyDown：快捷键录制框会先把 Esc 吃掉
         KeyDown += (_, e) =>
@@ -63,12 +71,36 @@ public partial class SettingsWindow : Window
         };
     }
 
+    /// <summary>刷新由代码写死的字符串（标题）。XAML 的 DynamicResource 会自动跟着语言变。</summary>
+    private void RefreshLocalizedStrings()
+    {
+        TitleText.Text = _firstRun ? Loc.Get("Str_SettingsFirstRun") : Loc.Get("Str_Settings");
+    }
+
     /// <summary>用户清空了数据。</summary>
     public event EventHandler? DataCleared;
 
     private void HintSwitchTabOnFirstRun(bool firstRun)
     {
-        if (firstRun) Tabs.SelectedIndex = 2; // 首次启动先看快捷键
+        if (firstRun) NavList.SelectedIndex = 2; // 首次启动先看快捷键
+    }
+
+    /// <summary>左栏导航切换：只显示当前分页，其余收起（无滚动条，整页平铺）。</summary>
+    private void OnNavSelectionChanged(object sender, SelectionChangedEventArgs e) => ShowCurrentPage();
+
+    private void ShowCurrentPage()
+    {
+        // XAML 里给 NavList 设 SelectedIndex="0" 会在 InitializeComponent 期间就触发本方法，
+        // 此时后面的分页面板字段还没赋值（仍为 null），先跳过；ctor 末尾会再调一次补全。
+        if (PageCapture is null || PagePrivacy is null || PageHotkeys is null
+            || PageAppearance is null || PageOther is null) return;
+
+        var index = NavList.SelectedIndex;
+        PageCapture.Visibility    = index == 0 ? Visibility.Visible : Visibility.Collapsed;
+        PagePrivacy.Visibility    = index == 1 ? Visibility.Visible : Visibility.Collapsed;
+        PageHotkeys.Visibility    = index == 2 ? Visibility.Visible : Visibility.Collapsed;
+        PageAppearance.Visibility = index == 3 ? Visibility.Visible : Visibility.Collapsed;
+        PageOther.Visibility      = index == 4 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void LoadFromSettings()
@@ -99,6 +131,8 @@ public partial class SettingsWindow : Window
 
             AccentList.ItemsSource = AccentPalettes.All;
             AccentList.SelectedItem = AccentPalettes.Resolve(current.AccentColor);
+
+            LanguageCombo.SelectedIndex = (int)current.Language;
         }
         finally
         {
@@ -132,6 +166,18 @@ public partial class SettingsWindow : Window
     private void OnAppearanceChanged(object sender, RoutedEventArgs e) => ApplyLive();
 
     private void OnAccentSelectionChanged(object sender, SelectionChangedEventArgs e) => ApplyLive();
+
+    /// <summary>语言切换立即生效：写盘并重新加载字符串资源（XAML 的 DynamicResource 会自动刷新）。</summary>
+    private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading) return;
+
+        var lang = LanguageCombo.SelectedIndex == 1
+            ? Services.Language.English
+            : Services.Language.Chinese;
+        _settings.Update(s => s.Language = lang);
+        _localization.Apply(lang);
+    }
 
     private void OnHotKeyGestureChanged(object? sender, EventArgs e) => ApplyLive();
 
@@ -177,7 +223,7 @@ public partial class SettingsWindow : Window
         _loading = true;
         AutoStartCheck.IsChecked = !wanted;
         _loading = false;
-        ShowError("写入开机自启失败（注册表不可写）");
+        ShowError(Loc.Get("Str_ErrAutoStart"));
     }
 
     /// <summary>
@@ -196,23 +242,23 @@ public partial class SettingsWindow : Window
         if (validateNumbers)
         {
             if (!TryReadRange(MaxItemsBox, AppSettings.MinItemsLimit, AppSettings.MaxItemsLimit,
-                    maxItems, "最多保存条数", out maxItems)) return;
+                    maxItems, Loc.Get("Str_MaxItems"), out maxItems)) return;
 
             if (!TryReadRange(MaxCharsBox, 1_000, 5_000_000,
-                    maxChars, "单条内容上限", out maxChars)) return;
+                    maxChars, Loc.Get("Str_MaxCharsLabel"), out maxChars)) return;
         }
 
         if (ToggleHotKeyEnabled.IsChecked == true
             && !HotKeyGesture.TryParse(ToggleGesture, out _, out _, out var toggleError))
         {
-            ShowError($"唤起主窗口的快捷键无效：{toggleError}");
+            ShowError(Loc.Format("Str_ErrHotkeyToggle", toggleError));
             return;
         }
 
         if (ManualHotKeyEnabled.IsChecked == true
             && !HotKeyGesture.TryParse(ManualGesture, out _, out _, out var captureError))
         {
-            ShowError($"主动收藏的快捷键无效：{captureError}");
+            ShowError(Loc.Format("Str_ErrHotkeyManual", captureError));
             return;
         }
 
@@ -220,7 +266,7 @@ public partial class SettingsWindow : Window
             && ManualHotKeyEnabled.IsChecked == true
             && string.Equals(ToggleGesture, ManualGesture, StringComparison.OrdinalIgnoreCase))
         {
-            ShowError("两个快捷键不能相同");
+            ShowError(Loc.Get("Str_ErrHotkeySame"));
             return;
         }
 
@@ -260,7 +306,7 @@ public partial class SettingsWindow : Window
     {
         if (int.TryParse(box.Text.Trim(), out value) && value >= min && value <= max) return true;
 
-        ShowError($"{label} 需填 {min:N0} ~ {max:N0} 之间的整数，已还原为 {fallback:N0}");
+        ShowError(Loc.Format("Str_ErrRange", label, min, max, fallback));
         value = fallback;
         box.Text = fallback.ToString();
         return false;
@@ -285,7 +331,7 @@ public partial class SettingsWindow : Window
         catch (Exception ex)
         {
             Log.Error("打开数据目录失败", ex);
-            ShowError("打开数据目录失败");
+            ShowError(Loc.Get("Str_ErrOpenFolder"));
         }
     }
 
@@ -294,14 +340,15 @@ public partial class SettingsWindow : Window
         var total = _clipService.Repository.Count();
         if (total == 0)
         {
-            MessageBox.Show(this, "现在没有任何片段。", "ClipNest", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, Loc.Get("Str_ClearEmpty"), Loc.Get("Str_ClearTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var answer = MessageBox.Show(
             this,
-            $"将删除除「置顶」和「收藏」之外的全部片段，共 {total} 条中可能有大部分会被删掉。\n\n此操作不可撤销，确定继续吗？",
-            "清空未收藏的片段",
+            Loc.Format("Str_ClearConfirm", total),
+            Loc.Get("Str_ClearTitle"),
             MessageBoxButton.OKCancel,
             MessageBoxImage.Warning,
             MessageBoxResult.Cancel);
@@ -311,7 +358,8 @@ public partial class SettingsWindow : Window
         var removed = _clipService.Repository.Clear(keepProtected: true);
         Log.Info($"用户手动清空了 {removed} 条片段");
         DataCleared?.Invoke(this, EventArgs.Empty);
-        MessageBox.Show(this, $"已删除 {removed} 条片段。", "ClipNest", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(this, Loc.Format("Str_ClearDone", removed), Loc.Get("Str_ClearTitle"),
+            MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e)

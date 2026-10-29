@@ -136,6 +136,16 @@ public sealed class SqliteClipRepository : IClipRepository
     public bool SetNote(long id, string? note)
         => Execute("UPDATE clips SET note = @note WHERE id = @id", new { id, note }) > 0;
 
+    public bool UpdateContent(long id, string content)
+    {
+        // content 改变后指纹随之改变：去重按新指纹走，未来相同内容会命中也更合理。
+        // clips_au 触发器会自动同步 clips_fts 全文索引，无需手动维护。
+        var hash = ContentFingerprint.Compute(content);
+        return Execute(
+            "UPDATE clips SET content = @content, content_hash = @hash, updated_at = @now WHERE id = @id",
+            new { id, content, hash, now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() }) > 0;
+    }
+
     public bool Delete(long id)
         => Execute("DELETE FROM clips WHERE id = @id", new { id }) > 0;
 

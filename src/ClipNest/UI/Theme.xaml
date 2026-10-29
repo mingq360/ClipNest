@@ -419,7 +419,7 @@
 
     <!-- ============ 滚动条：细、不抢戏 ============ -->
     <Style x:Key="ThinScrollBar" TargetType="ScrollBar">
-        <Setter Property="Width" Value="6" />
+        <Setter Property="Width" Value="5" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
             <Setter.Value>
