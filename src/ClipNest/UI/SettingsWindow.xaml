@@ -4,13 +4,13 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:controls="clr-namespace:ClipNest.UI.Controls"
         Title="ClipNest 设置"
-        Width="620" Height="660"
-        MinWidth="520" MinHeight="480"
+        Width="660" Height="672"
+        MinWidth="580" MinHeight="520"
         WindowStyle="None"
         ResizeMode="CanResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource WindowBg}"
+        Background="{DynamicResource WindowBg}"
         Icon="{StaticResource AppIconImage}"
         FontFamily="{StaticResource FontUi}"
         UseLayoutRounding="True"
@@ -21,183 +21,317 @@
     </shell:WindowChrome.WindowChrome>
 
     <Window.Resources>
+        <!-- 全局细滚动条，省得每个 ScrollViewer 里重复写 -->
+        <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}" />
+
         <Style x:Key="SectionTitle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
             <Setter Property="Margin" Value="0,0,0,10" />
         </Style>
         <Style x:Key="FieldLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style x:Key="FieldHelp" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="Margin" Value="0,6,0,0" />
         </Style>
         <Style x:Key="Section" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource SurfaceBg}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderSoft}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSoft}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="9" />
             <Setter Property="Padding" Value="16,14" />
             <Setter Property="Margin" Value="0,0,0,12" />
         </Style>
+
+        <!-- 主题色色块容器：去掉默认选中底板，选中样式画在模板内部 -->
+        <Style x:Key="AccentItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border Background="Transparent" Padding="2">
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <Border BorderBrush="{StaticResource BorderStrong}" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="56" />
             </Grid.RowDefinitions>
 
             <!-- 标题栏 -->
-            <Grid Grid.Row="0" Background="{StaticResource WindowBg}" MouseLeftButtonDown="OnHeaderMouseDown">
+            <Grid Grid.Row="0" Background="{DynamicResource WindowBg}" MouseLeftButtonDown="OnHeaderMouseDown">
                 <StackPanel Orientation="Horizontal" Margin="14,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
                     <Image Source="{StaticResource AppIconImage}" Width="15" Height="15" />
                     <TextBlock x:Name="TitleText" Text="设置" Margin="7,0,0,0" FontSize="12.5" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                               Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
                 </StackPanel>
                 <Button Content="✕" Style="{StaticResource IconButton}" HorizontalAlignment="Right"
                         Margin="0,0,7,0" Click="OnCancelClick" />
             </Grid>
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,4,16,0">
-                <ScrollViewer.Resources>
-                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}" />
-                </ScrollViewer.Resources>
-
+            <!-- 首次启动引导 -->
+            <Border x:Name="WelcomeCard" Grid.Row="1"
+                    Background="{DynamicResource AccentSoft}"
+                    BorderBrush="{DynamicResource Accent}"
+                    BorderThickness="1,0,0,0"
+                    Padding="16,10"
+                    Visibility="Collapsed">
                 <StackPanel>
-                    <!-- 首次启动引导 -->
-                    <Border x:Name="WelcomeCard" Style="{StaticResource Section}"
-                            Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource Accent}"
-                            Visibility="Collapsed">
-                        <StackPanel>
-                            <TextBlock Text="先定两件事" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Accent}" />
-                            <TextBlock Margin="0,6,0,0" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}"
-                                       Text="第一，用哪个快捷键唤起这个窗口；第二，哪些应用的内容你不想被收录。剩下的都可以以后再改。" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 采集 -->
-                    <Border Style="{StaticResource Section}">
-                        <StackPanel>
-                            <TextBlock Text="采集" Style="{StaticResource SectionTitle}" />
-
-                            <CheckBox x:Name="EnableMonitorCheck" Style="{StaticResource SoftCheckBox}"
-                                      Content="启用剪贴板监听" />
-                            <TextBlock Style="{StaticResource FieldHelp}" Margin="24,4,0,12"
-                                       Text="关闭后完全停止采集，效果等同于一直暂停。" />
-
-                            <CheckBox x:Name="ManualOnlyCheck" Style="{StaticResource SoftCheckBox}"
-                                      Content="仅手动收藏模式" />
-                            <TextBlock Style="{StaticResource FieldHelp}" Margin="24,4,0,0"
-                                       Text="开启后，普通复制不再入库，只有按「主动收藏」快捷键才会保存当前剪贴板内容。" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 隐私 -->
-                    <Border Style="{StaticResource Section}">
-                        <StackPanel>
-                            <TextBlock Text="隐私" Style="{StaticResource SectionTitle}" />
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="不采集以下应用（每行一个进程名）" />
-                            <TextBox x:Name="ExcludedAppsBox" Style="{StaticResource PlainTextBox}"
-                                     Margin="0,8,0,0" Height="86"
-                                     AcceptsReturn="True" TextWrapping="NoWrap"
-                                     VerticalScrollBarVisibility="Auto"
-                                     FontFamily="{StaticResource FontMono}" FontSize="12" />
-                            <TextBlock Style="{StaticResource FieldHelp}"
-                                       Text="按进程名匹配，写成 1password 或 1password.exe 都行。注意：这只能区分程序，区分不了浏览器里打开的网页版密码管理器。" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 容量 -->
-                    <Border Style="{StaticResource Section}">
-                        <StackPanel>
-                            <TextBlock Text="容量" Style="{StaticResource SectionTitle}" />
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="最多保存" />
-                                <TextBox x:Name="MaxItemsBox" Style="{StaticResource PlainTextBox}"
-                                         Width="94" Margin="8,0" TextAlignment="Right"
-                                         FontFamily="{StaticResource FontMono}" />
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="条" />
-                            </StackPanel>
-                            <TextBlock Style="{StaticResource FieldHelp}"
-                                       Text="超出后自动删除最旧的非置顶、非收藏片段。置顶与收藏的片段永远不会被自动清理，所以它们的数量可以超过这个上限。" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 快捷键 -->
-                    <Border Style="{StaticResource Section}">
-                        <StackPanel>
-                            <TextBlock Text="快捷键" Style="{StaticResource SectionTitle}" />
-
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="唤起主窗口" />
-                                <controls:HotKeyBox Grid.Column="1" x:Name="ToggleHotKeyBox" />
-                                <CheckBox Grid.Column="2" x:Name="ToggleHotKeyEnabled" Style="{StaticResource SoftCheckBox}"
-                                          Content="启用" Margin="12,0,0,0" />
-                            </Grid>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="主动收藏当前剪贴板" />
-                                <controls:HotKeyBox Grid.Column="1" x:Name="ManualHotKeyBox" />
-                                <CheckBox Grid.Column="2" x:Name="ManualHotKeyEnabled" Style="{StaticResource SoftCheckBox}"
-                                          Content="启用" Margin="12,0,0,0" />
-                            </Grid>
-
-                            <TextBlock Style="{StaticResource FieldHelp}"
-                                       Text="全局快捷键是系统独占的：注册成功后，其他程序在本地按同一组合键会收不到。若提示冲突，换一个组合即可。" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 其他 -->
-                    <Border Style="{StaticResource Section}">
-                        <StackPanel>
-                            <TextBlock Text="其他" Style="{StaticResource SectionTitle}" />
-
-                            <CheckBox x:Name="AutoStartCheck" Style="{StaticResource SoftCheckBox}" Content="开机自动启动" />
-                            <CheckBox x:Name="HideOnLostFocusCheck" Style="{StaticResource SoftCheckBox}"
-                                      Content="窗口失去焦点时自动隐藏" Margin="0,10,0,0" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 数据 -->
-                    <Border Style="{StaticResource Section}" Margin="0,0,0,4">
-                        <StackPanel>
-                            <TextBlock Text="数据" Style="{StaticResource SectionTitle}" />
-                            <TextBlock x:Name="DataPathText" Style="{StaticResource FieldHelp}" Margin="0,0,0,10"
-                                       FontFamily="{StaticResource FontMono}" />
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="打开数据目录" Style="{StaticResource GhostButton}" Click="OnOpenDataFolderClick" />
-                                <Button Content="清空未收藏的片段" Style="{StaticResource GhostButton}" Margin="8,0,0,0"
-                                        Click="OnClearClick" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
+                    <TextBlock Text="先定两件事" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" />
+                    <TextBlock Margin="0,4,0,0" FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                               Text="用哪个快捷键唤起窗口（「快捷键」页），以及哪些应用的内容不要收录（「隐私」页）。其余都可以以后再改。" />
                 </StackPanel>
-            </ScrollViewer>
+            </Border>
+
+            <!-- 顶部选项卡 -->
+            <TabControl x:Name="Tabs" Grid.Row="2" Style="{StaticResource TopTabControl}" SelectedIndex="0">
+
+                <!-- ===== 采集 ===== -->
+                <TabItem Header="采集">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14">
+                        <StackPanel>
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <CheckBox x:Name="EnableMonitorCheck" Style="{StaticResource SoftCheckBox}"
+                                              Content="启用剪贴板监听" />
+                                    <TextBlock Style="{StaticResource FieldHelp}" Margin="24,4,0,12"
+                                               Text="关闭后完全停止采集，效果等同于一直暂停。" />
+
+                                    <CheckBox x:Name="ManualOnlyCheck" Style="{StaticResource SoftCheckBox}"
+                                              Content="仅手动收藏模式" />
+                                    <TextBlock Style="{StaticResource FieldHelp}" Margin="24,4,0,0"
+                                               Text="开启后，普通复制不再入库，只有按「主动收藏」快捷键才会保存当前剪贴板内容。" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <TextBlock Text="容量" Style="{StaticResource SectionTitle}" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="最多保存" />
+                                        <TextBox x:Name="MaxItemsBox" Style="{StaticResource PlainTextBox}"
+                                                 Width="94" Margin="8,0" TextAlignment="Right"
+                                                 FontFamily="{StaticResource FontMono}" />
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="条" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource FieldHelp}"
+                                               Text="超出后自动删除最旧的非置顶、非收藏片段。置顶与收藏的片段永远不会被自动清理，所以它们的数量可以超过这个上限。" />
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="单条最多" />
+                                        <TextBox x:Name="MaxCharsBox" Style="{StaticResource PlainTextBox}"
+                                                 Width="94" Margin="8,0" TextAlignment="Right"
+                                                 FontFamily="{StaticResource FontMono}" />
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="字符" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource FieldHelp}"
+                                               Text="复制超长内容（比如整份日志）时截断保存，避免一次粘贴几 MB 撑爆索引。" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ===== 隐私 ===== -->
+                <TabItem Header="隐私">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14">
+                        <StackPanel>
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <TextBlock Text="不采集以下应用" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="每行一个进程名" />
+                                    <TextBox x:Name="ExcludedAppsBox" Style="{StaticResource PlainTextBox}"
+                                             Margin="0,8,0,0" Height="190"
+                                             AcceptsReturn="True" TextWrapping="NoWrap"
+                                             VerticalScrollBarVisibility="Auto"
+                                             FontFamily="{StaticResource FontMono}" FontSize="12" />
+                                    <TextBlock Style="{StaticResource FieldHelp}"
+                                               Text="写成 1password 或 1password.exe 都行，忽略大小写。注意：这只能区分程序，区分不了浏览器里打开的网页版密码管理器 —— 遇到那种情况请用「暂停采集」。" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ===== 快捷键 ===== -->
+                <TabItem Header="快捷键">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14">
+                        <StackPanel>
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <TextBlock Text="全局快捷键" Style="{StaticResource SectionTitle}" />
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="140" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="唤起主窗口" />
+                                        <controls:HotKeyBox Grid.Column="1" x:Name="ToggleHotKeyBox" />
+                                        <CheckBox Grid.Column="2" x:Name="ToggleHotKeyEnabled" Style="{StaticResource SoftCheckBox}"
+                                                  Content="启用" Margin="12,0,0,0" />
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="140" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="主动收藏剪贴板" />
+                                        <controls:HotKeyBox Grid.Column="1" x:Name="ManualHotKeyBox" />
+                                        <CheckBox Grid.Column="2" x:Name="ManualHotKeyEnabled" Style="{StaticResource SoftCheckBox}"
+                                                  Content="启用" Margin="12,0,0,0" />
+                                    </Grid>
+
+                                    <TextBlock Style="{StaticResource FieldHelp}"
+                                               Text="全局快捷键是系统独占的：注册成功后，其他程序在本地按同一组合键会收不到。若提示冲突，换一个组合即可。点击输入框后直接按下组合键即可录制，Esc 清空。" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ===== 外观 ===== -->
+                <TabItem Header="外观">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14">
+                        <StackPanel>
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <TextBlock Text="主题模式" Style="{StaticResource SectionTitle}" />
+
+                                    <Border HorizontalAlignment="Left"
+                                            Background="{DynamicResource WindowBg}"
+                                            BorderBrush="{DynamicResource BorderSoft}"
+                                            BorderThickness="1"
+                                            CornerRadius="7"
+                                            Padding="3">
+                                        <StackPanel Orientation="Horizontal">
+                                            <RadioButton x:Name="ThemeLightRadio" GroupName="ThemeMode" Style="{StaticResource SegmentRadio}"
+                                                         Content="浅色" Click="OnAppearanceChanged" />
+                                            <RadioButton x:Name="ThemeDarkRadio" GroupName="ThemeMode" Style="{StaticResource SegmentRadio}"
+                                                         Content="深色" Click="OnAppearanceChanged" />
+                                            <RadioButton x:Name="ThemeSystemRadio" GroupName="ThemeMode" Style="{StaticResource SegmentRadio}"
+                                                         Content="跟随系统" Click="OnAppearanceChanged" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <TextBlock Style="{StaticResource FieldHelp}"
+                                               Text="默认浅色。「跟随系统」会读取 Windows 的浅色/深色设置，系统切换时本窗口立即跟着变。" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <TextBlock Text="主题色" Style="{StaticResource SectionTitle}" />
+
+                                    <ListBox x:Name="AccentList"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Padding="0"
+                                             ItemContainerStyle="{StaticResource AccentItemStyle}"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             SelectionChanged="OnAccentSelectionChanged">
+                                        <ListBox.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ListBox.ItemsPanel>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Width="74" Margin="0,2">
+                                                    <Grid Width="40" Height="40" HorizontalAlignment="Center">
+                                                        <Border x:Name="Dot"
+                                                                CornerRadius="20"
+                                                                BorderThickness="2"
+                                                                BorderBrush="Transparent"
+                                                                Background="{Binding BaseBrush}" />
+                                                        <TextBlock x:Name="Tick"
+                                                                   Text="✓"
+                                                                   FontSize="15"
+                                                                   Foreground="White"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Visibility="Collapsed" />
+                                                    </Grid>
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               FontSize="11"
+                                                               Margin="0,5,0,0"
+                                                               HorizontalAlignment="Center"
+                                                               Foreground="{DynamicResource TextSecondary}" />
+                                                </StackPanel>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                        <Setter TargetName="Dot" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                                                        <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <TextBlock Style="{StaticResource FieldHelp}"
+                                               Text="主题色用于强调、选中态与按钮。改动会立即生效，点「取消」可还原。" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ===== 其他 ===== -->
+                <TabItem Header="其他">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14">
+                        <StackPanel>
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <TextBlock Text="启动与窗口" Style="{StaticResource SectionTitle}" />
+                                    <CheckBox x:Name="AutoStartCheck" Style="{StaticResource SoftCheckBox}" Content="开机自动启动" />
+                                    <CheckBox x:Name="HideOnLostFocusCheck" Style="{StaticResource SoftCheckBox}"
+                                              Content="窗口失去焦点时自动隐藏" Margin="0,10,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Section}">
+                                <StackPanel>
+                                    <TextBlock Text="数据" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock x:Name="DataPathText" Style="{StaticResource FieldHelp}" Margin="0,0,0,10"
+                                               FontFamily="{StaticResource FontMono}" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="打开数据目录" Style="{StaticResource GhostButton}" Click="OnOpenDataFolderClick" />
+                                        <Button Content="清空未收藏的片段" Style="{StaticResource GhostButton}" Margin="8,0,0,0"
+                                                Click="OnClearClick" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource FieldHelp}"
+                                               Text="数据只存在本机，不上传、不联网。清空操作不可撤销。" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
 
             <!-- 底部按钮 -->
-            <Border Grid.Row="2" BorderBrush="{StaticResource BorderSoft}" BorderThickness="0,1,0,0">
+            <Border Grid.Row="3" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,1,0,0">
                 <Grid Margin="16,0">
                     <TextBlock x:Name="ErrorText" VerticalAlignment="Center" FontSize="11.5"
-                               Foreground="{StaticResource Danger}" TextWrapping="Wrap" MaxWidth="360"
+                               Foreground="{DynamicResource Danger}" TextWrapping="Wrap" MaxWidth="380"
                                HorizontalAlignment="Left" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button Content="取消" Style="{StaticResource GhostButton}" Padding="18,7" Click="OnCancelClick" />

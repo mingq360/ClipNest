@@ -104,9 +104,8 @@ public partial class HotKeyBox : UserControl
         var focused = Root.IsKeyboardFocusWithin;
         var hasGesture = !string.IsNullOrWhiteSpace(Gesture);
 
-        Root.BorderBrush = focused
-            ? (Brush)FindResource("Accent")
-            : (Brush)FindResource("BorderSoft");
+        // 用 SetResourceReference 而不是直接赋画刷：切换深浅色时能跟着重新解析
+        Root.SetResourceReference(Border.BorderBrushProperty, focused ? "Accent" : "BorderSoft");
 
         if (hasGesture)
         {

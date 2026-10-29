@@ -7,6 +7,11 @@ internal static class NativeMethods
 {
     public const int WM_CLIPBOARDUPDATE = 0x031D;
     public const int WM_HOTKEY = 0x0312;
+    public const int WM_SETTINGCHANGE = 0x001A;
+
+    /// <summary>WM_SETTINGCHANGE 的 lParam 指向区域名字符串。</summary>
+    public static string GetSettingChangeArea(IntPtr lParam)
+        => lParam == IntPtr.Zero ? string.Empty : Marshal.PtrToStringUni(lParam) ?? string.Empty;
 
     public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
     public const uint WINEVENT_OUTOFCONTEXT = 0x0000;

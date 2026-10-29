@@ -1,4 +1,14 @@
+using System.Text.Json.Serialization;
+
 namespace ClipNest.Services;
+
+/// <summary>界面主题。跟随系统时会实时读取 Windows 的明暗设置。</summary>
+public enum ThemeMode
+{
+    Light = 0,
+    Dark = 1,
+    System = 2,
+}
 
 public sealed class HotKeySettings
 {
@@ -36,6 +46,13 @@ public sealed class AppSettings
 
     public bool FirstRunCompleted { get; set; }
 
+    /// <summary>浅色 / 深色 / 跟随系统。默认浅色。</summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public ThemeMode Theme { get; set; } = ThemeMode.Light;
+
+    /// <summary>主题色标识（见 UI.Theming.AccentPalettes）。默认青绿。</summary>
+    public string AccentColor { get; set; } = "Teal";
+
     /// <summary>不采集的应用（进程名，不含 .exe，忽略大小写）。</summary>
     public List<string> ExcludedApps { get; set; } = new()
     {
@@ -68,6 +85,10 @@ public sealed class AppSettings
             .Select(NormalizeAppName)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        // 手工改过 settings.json 或旧版本文件里没有这两个字段时的兜底
+        if (!Enum.IsDefined(Theme)) Theme = ThemeMode.Light;
+        if (string.IsNullOrWhiteSpace(AccentColor)) AccentColor = "Teal";
     }
 
     public static string NormalizeAppName(string appName)

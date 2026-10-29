@@ -5,8 +5,8 @@
 
     <Border x:Name="Root"
             Focusable="True"
-            Background="{StaticResource SurfaceBg}"
-            BorderBrush="{StaticResource BorderSoft}"
+            Background="{DynamicResource SurfaceBg}"
+            BorderBrush="{DynamicResource BorderSoft}"
             BorderThickness="1"
             CornerRadius="6"
             Padding="10,6"
@@ -20,11 +20,11 @@
             <TextBlock x:Name="ValueText"
                        FontSize="12.5"
                        FontFamily="{StaticResource FontMono}"
-                       Foreground="{StaticResource TextPrimary}"
+                       Foreground="{DynamicResource TextPrimary}"
                        VerticalAlignment="Center" />
             <TextBlock x:Name="HintText"
                        FontSize="12"
-                       Foreground="{StaticResource TextMuted}"
+                       Foreground="{DynamicResource TextMuted}"
                        VerticalAlignment="Center"
                        Visibility="Collapsed" />
         </Grid>

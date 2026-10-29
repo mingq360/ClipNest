@@ -45,6 +45,8 @@ snippet you copy, and gives it back to you in under a second.
   box. `Ctrl+Alt+C` force-saves the current clipboard even while paused.
 - **Pinned and starred entries survive cleanup** — when the store hits its cap, the oldest
   *unprotected* entries go first. Your keepers don't.
+- **Light or dark, in your colour** — light by default, or follow the Windows setting. Six accent
+  colours, applied live without a restart.
 
 ## Requirements
 

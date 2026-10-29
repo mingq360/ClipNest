@@ -11,6 +11,7 @@ using ClipNest.Infrastructure.HotKey;
 using ClipNest.Infrastructure.Native;
 using ClipNest.Services;
 using ClipNest.UI;
+using ClipNest.UI.Theming;
 using ClipNest.UI.ViewModels;
 using Microsoft.Data.Sqlite;
 
@@ -32,6 +33,7 @@ public partial class App : Application
     private Db? _db;
     private SqliteClipRepository? _repository;
     private ClipService? _clipService;
+    private ThemeService? _themeService;
 
     private HiddenWindow? _hiddenWindow;
     private ForegroundTracker? _foregroundTracker;
@@ -89,6 +91,11 @@ public partial class App : Application
         _settings = new SettingsService();
         _settings.Load();
 
+        // 主题必须在任何窗口创建之前写好画刷：XAML 里全是 DynamicResource，
+        // 资源缺席时控件会以「无画刷」状态初始化
+        _themeService = new ThemeService(this);
+        _themeService.Apply(_settings.Current.Theme, _settings.Current.AccentColor);
+
         _db = new Db();
         _db.Initialize();
 
@@ -96,6 +103,7 @@ public partial class App : Application
         _clipService = new ClipService(_repository, _settings);
 
         _hiddenWindow = new HiddenWindow();
+        _hiddenWindow.MessageReceived += OnHiddenWindowMessage;
         _foregroundTracker = new ForegroundTracker();
 
         _monitor = new ClipboardMonitor(_hiddenWindow, _foregroundTracker);
@@ -135,6 +143,20 @@ public partial class App : Application
     }
 
     // ------------------------------------------------------------ 采集
+
+    /// <summary>系统切换浅色/深色时 Windows 会广播 WM_SETTINGCHANGE，lParam 为 ImmersiveColorSet。</summary>
+    private bool OnHiddenWindowMessage(int msg, IntPtr wParam, IntPtr lParam)
+    {
+        if (msg != NativeMethods.WM_SETTINGCHANGE) return false;
+
+        var area = NativeMethods.GetSettingChangeArea(lParam);
+        if (string.Equals(area, "ImmersiveColorSet", StringComparison.OrdinalIgnoreCase))
+        {
+            _themeService?.OnSystemPreferenceChanged();
+        }
+
+        return false;
+    }
 
     private void ApplyMonitorState()
     {
@@ -255,7 +277,7 @@ public partial class App : Application
 
     private void OpenSettings(bool firstRun)
     {
-        if (_settings is null || _clipService is null || _mainWindow is null) return;
+        if (_settings is null || _clipService is null || _mainWindow is null || _themeService is null) return;
 
         if (_settingsWindow is not null)
         {
@@ -266,7 +288,7 @@ public partial class App : Application
         // 设置窗口是模态的，期间主窗口不能因为失焦而自动隐藏
         using (_mainWindow.SuppressAutoHide())
         {
-            var window = new SettingsWindow(_settings, _clipService, firstRun);
+            var window = new SettingsWindow(_settings, _clipService, _themeService, firstRun);
             if (_mainWindow.IsVisible) window.Owner = _mainWindow;
 
             _settingsWindow = window;
