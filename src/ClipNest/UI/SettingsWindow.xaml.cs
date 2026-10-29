@@ -5,7 +5,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using ClipNest.Infrastructure.Data;
 using ClipNest.Infrastructure.Diagnostics;
-using ClipNest.Infrastructure.Native;
 using ClipNest.Infrastructure.Startup;
 using ClipNest.Services;
 using ClipNest.UI.Theming;
@@ -62,18 +61,6 @@ public partial class SettingsWindow : Window
                 _settings.Update(s => s.FirstRunCompleted = true);
             }
         };
-
-        SourceInitialized += OnSourceInitialized;
-    }
-
-    /// <summary>无边框窗口默认没有投影，借 DWM 的 1px 扩展边框把系统阴影要回来。</summary>
-    private void OnSourceInitialized(object? sender, EventArgs e)
-    {
-        var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-        if (!NativeMethods.EnableNativeShadow(handle))
-        {
-            Log.Warn("设置窗口投影启用失败，界面功能不受影响");
-        }
     }
 
     /// <summary>用户清空了数据。</summary>

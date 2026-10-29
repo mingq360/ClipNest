@@ -1,24 +1,26 @@
 <Window x:Class="ClipNest.UI.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:controls="clr-namespace:ClipNest.UI.Controls"
         Title="ClipNest 设置"
-        Width="596"
-        Height="350"
+        Width="632"
+        Height="386"
         WindowStyle="None"
         ResizeMode="NoResize"
+        AllowsTransparency="True"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowBg}"
+        Background="Transparent"
         Icon="{StaticResource AppIconImage}"
         FontFamily="{StaticResource FontUi}"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display">
-
-    <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="5" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False" />
-    </shell:WindowChrome.WindowChrome>
+    <!--
+        投影走 AllowsTransparency + DropShadowEffect，而不是 DWM 扩展边框：
+        ResizeMode=NoResize 的窗口缺少 WS_THICKFRAME，DWM 不再投阴影。
+        代价是这个窗口退回软件合成（590×350 的小窗可以接受），换来任何缩放比下都稳定的阴影。
+        窗口比可见卡片大 14px 一圈，留给阴影扩散。
+    -->
 
     <Window.Resources>
         <!-- 全局细滚动条，省得每个 ScrollViewer 里重复写 -->
@@ -65,8 +67,24 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1">
-        <Grid>
+    <Grid>
+        <!--
+            影子单独占一层，内容层不带 Effect —— 否则整棵子树会被栅格化，文字丢掉 ClearType。
+            影子层用 Margin=4 + Padding=14，让它的位图比卡片大一圈，阴影才有地方扩散。
+        -->
+        <Border Margin="4" Padding="14" Background="Transparent">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" Opacity="0.26" BlurRadius="16" ShadowDepth="2" Direction="270" />
+            </Border.Effect>
+            <Border Background="{DynamicResource WindowBg}" CornerRadius="10" />
+        </Border>
+
+        <Border Margin="18"
+                Background="{DynamicResource WindowBg}"
+                BorderBrush="{DynamicResource BorderStrong}"
+                BorderThickness="1"
+                CornerRadius="10">
+            <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
                 <RowDefinition Height="Auto" />
@@ -349,5 +367,6 @@
                            Foreground="{DynamicResource Danger}" TextWrapping="Wrap" />
             </Border>
         </Grid>
-    </Border>
+        </Border>
+    </Grid>
 </Window>

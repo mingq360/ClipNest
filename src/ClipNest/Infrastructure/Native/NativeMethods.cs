@@ -66,31 +66,6 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
-    [DllImport("dwmapi.dll")]
-    public static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS margins);
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MARGINS
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
-    /// <summary>
-    /// 给无边框窗口补上系统投影。
-    /// 不用 AllowsTransparency + Effect：那会让窗口退回软件渲染，而且阴影只能自己画。
-    /// 把 DWM 边框向外扩 1px，系统就会按原生窗口的方式投一层阴影，且不增加渲染负担。
-    /// </summary>
-    public static bool EnableNativeShadow(IntPtr hwnd)
-    {
-        if (hwnd == IntPtr.Zero) return false;
-
-        var margins = new MARGINS { Left = 1, Top = 1, Right = 1, Bottom = 1 };
-        return DwmExtendFrameIntoClientArea(hwnd, ref margins) == 0;
-    }
-
     public static string GetWindowTitle(IntPtr hwnd)
     {
         var length = GetWindowTextLength(hwnd);
