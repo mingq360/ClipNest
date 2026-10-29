@@ -255,19 +255,85 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GetMonitorInfo(IntPtr monitor, ref MONITORINFO info);
 
-    /// <summary>取鼠标所在显示器的工作区（已排除任务栏），单位：物理像素。</summary>
-    public static RECT GetCursorWorkArea()
+    /// <summary>鼠标所在的那个显示器。</summary>
+    public static IntPtr GetCursorMonitor()
     {
-        if (!GetCursorPos(out var cursor))
-        {
-            return default;
-        }
+        if (!GetCursorPos(out var cursor)) return IntPtr.Zero;
 
-        var monitor = MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST);
+        return MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST);
+    }
+
+    /// <summary>取鼠标所在显示器的工作区（已排除任务栏），单位：物理像素。</summary>
+    public static RECT GetCursorWorkArea() => GetMonitorWorkArea(GetCursorMonitor());
+
+    /// <summary>取指定窗口所在显示器的工作区，单位：物理像素。</summary>
+    public static RECT GetWindowWorkArea(IntPtr hwnd)
+        => GetMonitorWorkArea(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST));
+
+    /// <summary>取某个显示器的工作区。monitor 为 0 时返回空矩形（Width 为 0，调用方可据此判断失败）。</summary>
+    public static RECT GetMonitorWorkArea(IntPtr monitor)
+    {
         if (monitor == IntPtr.Zero) return default;
 
         var info = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
         return GetMonitorInfo(monitor, ref info) ? info.rcWork : default;
+    }
+
+    private const int MdtEffectiveDpi = 0;
+
+    [DllImport("shcore.dll")]
+    private static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
+
+    /// <summary>
+    /// 取指定显示器的缩放 DPI（96 为 100%）。
+    /// 这是「每个显示器各自不同」的那一档：混合缩放的多屏环境里，主屏和扩展屏往往不一样。
+    /// 取不到就按 96 兜底。
+    /// </summary>
+    public static (uint DpiX, uint DpiY) GetMonitorDpi(IntPtr monitor)
+    {
+        if (monitor == IntPtr.Zero) return (96, 96);
+
+        return GetDpiForMonitor(monitor, MdtEffectiveDpi, out var dpiX, out var dpiY) == 0
+            ? (dpiX, dpiY)
+            : (96, 96);
+    }
+
+    /// <summary>鼠标所在显示器的 DPI，顺带把显示器句柄也带出来。</summary>
+    public static (IntPtr Monitor, uint DpiX, uint DpiY) GetCursorMonitorDpi()
+    {
+        var monitor = GetCursorMonitor();
+        var (dpiX, dpiY) = GetMonitorDpi(monitor);
+
+        return (monitor, dpiX, dpiY);
+    }
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
+
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+
+    /// <summary>
+    /// 用**物理像素**移动窗口。
+    ///
+    /// 为什么不直接设 Window.Left/Top：那是 DIP，而 DIP→像素的换算比例是「每显示器」不同的。
+    /// 窗口刚创建时还在主屏上，WPF 会用主屏的缩放比去换算目标坐标；
+    /// 一旦目标落在缩放比不同的扩展屏上，位置就会偏 —— 多显示器下这是必然出错的地方。
+    /// </summary>
+    public static bool MoveWindowPixels(IntPtr hwnd, int x, int y)
+    {
+        if (hwnd == IntPtr.Zero) return false;
+
+        return SetWindowPos(hwnd, IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
     }
 
     public static POINT GetCursorPosition()

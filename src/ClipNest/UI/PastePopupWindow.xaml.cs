@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using ClipNest.Domain;
 using ClipNest.Infrastructure.Clipboard;
@@ -33,12 +34,12 @@ public partial class PastePopupWindow : Window
         _viewModel = new PickerViewModel(repository);
         DataContext = _viewModel;
 
-        // 定位放在 SourceInitialized：这时句柄已建、DPI 已知，窗口还没绘制，
-        // 放在 Loaded 里会先出现在默认位置再跳一下
+        // 定位做两次：句柄一建好就先挪过去（避免在主屏上闪一下），
+        // 布局完成后再定一次（那时尺寸才准，且能覆盖 WPF 自己应用的初始矩形）
         SourceInitialized += (_, _) => MoveToCursor();
         Loaded += (_, _) =>
         {
-            EnsureFitsOnScreen();
+            MoveToCursor();
             Activate();
             SearchBox.Focus();
         };
@@ -59,52 +60,56 @@ public partial class PastePopupWindow : Window
 
     // ------------------------------------------------------------ 定位
 
-    /// <summary>左上角直接落在鼠标位置（和右键菜单一致），只做屏幕内夹取。</summary>
+    /// <summary>
+    /// 左上角落在鼠标位置（和右键菜单一致），并夹在鼠标所在的那个显示器里。
+    ///
+    /// 全程用物理像素，并且一致地用「光标所在显示器」的 DPI，这是多屏下不跑偏的关键：
+    /// 窗口在创建的那一刻还挂在主屏上，WPF 的任何 DIP↔像素换算都会按主屏的缩放比去做，
+    /// 一旦扩展屏缩放比不同，算出来的位置就会整体偏掉。
+    /// </summary>
     private void MoveToCursor()
     {
         try
         {
+            var handle = new WindowInteropHelper(this).Handle;
+            if (handle == IntPtr.Zero) return;
+
             var cursor = NativeMethods.GetCursorPosition();
-            var workArea = NativeMethods.GetCursorWorkArea();
-            if (workArea.Width <= 0) return;
+            var (monitor, dpiX, dpiY) = NativeMethods.GetCursorMonitorDpi();
+            var workArea = NativeMethods.GetMonitorWorkArea(monitor);
 
-            var dpi = VisualTreeHelper.GetDpi(this);
-            var x = cursor.X / dpi.DpiScaleX;
-            var y = cursor.Y / dpi.DpiScaleY;
+            if (workArea.Width <= 0)
+            {
+                NativeMethods.MoveWindowPixels(handle, cursor.X, cursor.Y);
+                return;
+            }
 
-            var width = ActualWidth > 0 ? ActualWidth : Width;
-            var workLeft = workArea.Left / dpi.DpiScaleX;
-            var workRight = workArea.Right / dpi.DpiScaleX;
-            var workTop = workArea.Top / dpi.DpiScaleY;
+            var x = cursor.X;
+            var y = cursor.Y;
 
-            Left = Math.Max(workLeft, Math.Min(x, workRight - width));
-            Top = Math.Max(workTop, y);
+            // 高度是内容撑出来的，而且切到另一个缩放比的屏幕后尺寸还会变，
+            // 这里按目标屏幕的缩放比预估一下，避免夹取时用了过期的尺寸
+            if (NativeMethods.GetWindowRect(handle, out var rect) && rect.Width > 0)
+            {
+                var dpi = VisualTreeHelper.GetDpi(this);
+                var scaleX = dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1;
+                var scaleY = dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1;
+
+                var width = (int)Math.Round(rect.Width / scaleX * (dpiX / 96.0));
+                var height = (int)Math.Round(rect.Height / scaleY * (dpiY / 96.0));
+
+                if (x + width > workArea.Right) x = workArea.Right - width;
+                if (y + height > workArea.Bottom) y = workArea.Bottom - height;
+            }
+
+            x = Math.Clamp(x, workArea.Left, Math.Max(workArea.Left, workArea.Right - 1));
+            y = Math.Clamp(y, workArea.Top, Math.Max(workArea.Top, workArea.Bottom - 1));
+
+            NativeMethods.MoveWindowPixels(handle, x, y);
         }
         catch (Exception ex)
         {
             Log.Error("历史菜单定位失败", ex);
-        }
-    }
-
-    /// <summary>高度是内容撑出来的，等布局完成后再纠一次底部越界。</summary>
-    private void EnsureFitsOnScreen()
-    {
-        try
-        {
-            var workArea = NativeMethods.GetCursorWorkArea();
-            if (workArea.Width <= 0 || ActualHeight <= 0) return;
-
-            var dpi = VisualTreeHelper.GetDpi(this);
-            var workTop = workArea.Top / dpi.DpiScaleY;
-            var workBottom = workArea.Bottom / dpi.DpiScaleY;
-
-            if (Top + ActualHeight <= workBottom) return;
-
-            Top = Math.Max(workTop, workBottom - ActualHeight);
-        }
-        catch (Exception ex)
-        {
-            Log.Error("历史菜单边界修正失败", ex);
         }
     }
 

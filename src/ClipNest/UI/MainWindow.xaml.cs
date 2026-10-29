@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
+using System.Windows.Interop;
 using ClipNest.Infrastructure.Diagnostics;
 using ClipNest.Infrastructure.Native;
 using ClipNest.Services;
@@ -90,28 +90,36 @@ public partial class MainWindow : Window
         SearchBox.CaretIndex = SearchBox.Text.Length;
     }
 
-    /// <summary>在工作区内居中，而不是贴在屏幕上沿。</summary>
+    /// <summary>在鼠标所在显示器的工作区里居中，而不是贴在屏幕上沿。</summary>
     private void CenterOnCursorScreen()
     {
         try
         {
-            var workArea = NativeMethods.GetCursorWorkArea();
-            if (workArea.Width <= 0 || workArea.Height <= 0) return;
+            var handle = new WindowInteropHelper(this).Handle;
+            if (handle == IntPtr.Zero) return;
 
-            var dpi = VisualTreeHelper.GetDpi(this);
-            var workLeft = workArea.Left / dpi.DpiScaleX;
-            var workTop = workArea.Top / dpi.DpiScaleY;
-            var workWidth = workArea.Width / dpi.DpiScaleX;
-            var workHeight = workArea.Height / dpi.DpiScaleY;
+            var (monitor, dpiX, dpiY) = NativeMethods.GetCursorMonitorDpi();
+            var workArea = NativeMethods.GetMonitorWorkArea(monitor);
+            if (workArea.Width <= 0 || workArea.Height <= 0) return;
 
             var width = ActualWidth > 0 ? ActualWidth : Width;
             var height = ActualHeight > 0 ? ActualHeight : Height;
+            if (width <= 0 || height <= 0) return;
 
-            Left = workLeft + (workWidth - width) / 2;
-            Top = workTop + (workHeight - height) / 2;
+            // 全程物理像素，而不是设 Left/Top：
+            // Left/Top 是 DIP，WPF 会按「窗口当前所在屏幕」的缩放比去换算，
+            // 此时窗口还挂在主屏上，副屏缩放比不同就会整体偏掉（多屏最常见的坑）。
+            // 另外窗口挪到另一个缩放比的屏幕后尺寸本身也会变，这里按目标屏的缩放比折算。
+            var physicalWidth = (int)Math.Round(width * (dpiX / 96.0));
+            var physicalHeight = (int)Math.Round(height * (dpiY / 96.0));
 
-            Left = Math.Max(workLeft, Math.Min(Left, workLeft + workWidth - width));
-            Top = Math.Max(workTop, Math.Min(Top, workTop + workHeight - height));
+            var x = workArea.Left + (workArea.Width - physicalWidth) / 2;
+            var y = workArea.Top + (workArea.Height - physicalHeight) / 2;
+
+            x = Math.Clamp(x, workArea.Left, Math.Max(workArea.Left, workArea.Right - physicalWidth));
+            y = Math.Clamp(y, workArea.Top, Math.Max(workArea.Top, workArea.Bottom - physicalHeight));
+
+            NativeMethods.MoveWindowPixels(handle, x, y);
         }
         catch (Exception ex)
         {
