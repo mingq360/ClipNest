@@ -5,11 +5,9 @@
         xmlns:controls="clr-namespace:ClipNest.UI.Controls"
         Title="ClipNest 设置"
         Width="596"
-        SizeToContent="Height"
-        MinHeight="320"
-        MinWidth="520"
+        Height="350"
         WindowStyle="None"
-        ResizeMode="CanResize"
+        ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowBg}"
@@ -72,7 +70,8 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <!-- 选项卡必须占满剩余高度，否则内容会溢出窗口被裁掉而不是出滚动条 -->
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 

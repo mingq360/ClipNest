@@ -63,7 +63,6 @@ public partial class SettingsWindow : Window
             }
         };
 
-        Loaded += (_, _) => ClampHeightToScreen();
         SourceInitialized += OnSourceInitialized;
     }
 
@@ -83,20 +82,6 @@ public partial class SettingsWindow : Window
     private void HintSwitchTabOnFirstRun(bool firstRun)
     {
         if (firstRun) Tabs.SelectedIndex = 2; // 首次启动先看快捷键
-    }
-
-    /// <summary>窗口高度随内容自适应，但不能超出屏幕可用区域。</summary>
-    private void ClampHeightToScreen()
-    {
-        try
-        {
-            var workArea = SystemParameters.WorkArea;
-            MaxHeight = Math.Max(MinHeight, workArea.Height - 40);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"计算设置窗口最大高度失败：{ex.Message}");
-        }
     }
 
     private void LoadFromSettings()
