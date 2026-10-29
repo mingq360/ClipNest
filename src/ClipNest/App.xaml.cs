@@ -44,6 +44,7 @@ public partial class App : Application
     private MainWindow? _mainWindow;
     private MainViewModel? _viewModel;
     private SettingsWindow? _settingsWindow;
+    private PastePopupWindow? _pastePopup;
 
     private string _hotKeySignature = string.Empty;
     private string? _lastHotKeyError;
@@ -258,6 +259,8 @@ public partial class App : Application
 
     private void CaptureCurrentClipboard()
     {
+        // 先把这个动作本身要用的「当前剪贴板」收进库：
+        // 「仅手动收藏模式」下这是唯一的采集入口，顺带也让刚复制的内容排在列表第一条
         string? text = null;
         try
         {
@@ -268,23 +271,39 @@ public partial class App : Application
             Log.Warn($"读取剪贴板失败：{ex.Message}");
         }
 
-        if (string.IsNullOrWhiteSpace(text))
+        if (!string.IsNullOrWhiteSpace(text))
         {
-            _tray?.ShowError("剪贴板里没有可收藏的文本");
+            var source = _foregroundTracker?.Current ?? ForegroundSnapshot.Empty;
+            _clipService?.Capture(text, source.ProcessName, source.Title, manual: true);
+        }
+
+        ShowPastePicker();
+    }
+
+    /// <summary>唤出历史选择菜单，选中后自动粘贴回原来的窗口。</summary>
+    private void ShowPastePicker()
+    {
+        if (_repository is null) return;
+
+        if (_pastePopup is not null)
+        {
+            _pastePopup.Activate();
             return;
         }
 
-        var source = _foregroundTracker?.Current ?? ForegroundSnapshot.Empty;
-        var saved = _clipService?.Capture(text, source.ProcessName, source.Title, manual: true);
+        // 必须在弹窗之前取：弹窗会抢走前台
+        var target = NativeMethods.GetForegroundWindow();
+        if (target == IntPtr.Zero) target = _foregroundTracker?.Current.Handle ?? IntPtr.Zero;
 
-        if (saved is null)
+        var popup = new PastePopupWindow(_repository, target);
+        _pastePopup = popup;
+        popup.Closed += (_, _) =>
         {
-            _tray?.ShowError("没有收藏成功，详情见日志");
-            return;
-        }
+            _pastePopup = null;
+            _viewModel?.Reload();
+        };
 
-        var preview = saved.Preview(40);
-        _tray?.ShowInfo($"已收藏：{preview}");
+        popup.Show();
     }
 
     // ------------------------------------------------------------ 窗口

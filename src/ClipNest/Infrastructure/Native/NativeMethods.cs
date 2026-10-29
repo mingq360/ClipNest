@@ -42,6 +42,79 @@ internal static class NativeMethods
     public static extern bool UnregisterHotKey(IntPtr hwnd, int id);
 
     [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetForegroundWindow(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindow(IntPtr hwnd);
+
+    public static uint GetWindowProcessId(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return 0;
+
+        _ = GetWindowThreadProcessId(hwnd, out var pid);
+        return pid;
+    }
+
+    // ---------------------------------------------------------------- 模拟按键
+
+    private const uint InputKeyboard = 1;
+    private const uint KeyEventKeyUp = 0x0002;
+    private const ushort VkControl = 0x11;
+    private const ushort VkV = 0x56;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct KEYBDINPUT
+    {
+        public ushort wVk;
+        public ushort wScan;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct INPUT
+    {
+        public uint type;
+        public KEYBDINPUT ki;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    /// <summary>
+    /// 往当前前台窗口发一次 Ctrl+V。
+    /// 用 SendInput 而不是往子窗口发 WM_PASTE：浏览器、Electron 应用只认真实的键盘消息。
+    /// </summary>
+    public static bool SendCtrlV()
+    {
+        var inputs = new[]
+        {
+            MakeKey(VkControl, 0),
+            MakeKey(VkV, 0),
+            MakeKey(VkV, KeyEventKeyUp),
+            MakeKey(VkControl, KeyEventKeyUp),
+        };
+
+        return SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>()) == inputs.Length;
+    }
+
+    private static INPUT MakeKey(ushort virtualKey, uint flags) => new()
+    {
+        type = InputKeyboard,
+        ki = new KEYBDINPUT
+        {
+            wVk = virtualKey,
+            wScan = 0,
+            dwFlags = flags,
+            time = 0,
+            dwExtraInfo = IntPtr.Zero,
+        },
+    };
+
+    [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
 
     [DllImport("user32.dll", SetLastError = true)]

@@ -42,7 +42,10 @@ snippet you copy, and gives it back to you in under a second.
 - **Quiet by design** — tray only. No toast on every copy, no splash, no account, no "sign in to
   continue". It never phones home because it has nowhere to phone.
 - **Pause and denylist** — one click to stop collecting; password managers are excluded out of the
-  box. `Ctrl+Alt+C` force-saves the current clipboard even while paused.
+  box.
+- **Pick and paste in place** — hit the second hotkey inside any app and a compact picker opens with
+  your history. Choose an entry and it is pasted straight into the field you were typing in, no
+  switching back to a manager window. This is the CLCL workflow people have missed for years.
 - **Pinned and starred entries survive cleanup** — when the store hits its cap, the oldest
   *unprotected* entries go first. Your keepers don't.
 - **Light or dark, in your colour** — light by default, or follow the Windows setting. Six accent
@@ -73,7 +76,7 @@ leave the home row.
 | Key | Action |
 | --- | --- |
 | `Ctrl+Alt+V` | Summon / dismiss the window (configurable) |
-| `Ctrl+Alt+C` | Save the current clipboard right now (works while paused) |
+| `Ctrl+Alt+C` | Open the history picker and paste directly into the window you were in |
 | `↑` `↓` | Move through results without leaving the search box |
 | `Enter` | Copy the selected snippet and hide |
 | `Ctrl+P` | Pin / unpin |
@@ -91,7 +94,7 @@ flowchart LR
     C -- no --> D["Fingerprint / dedupe"]
     D --> E[("SQLite + FTS5 trigram")]
     E --> F["Hotkey → type 2 chars"]
-    F --> G["Enter → back to clipboard"]
+    F --> G["Enter → pasted back in place"]
 ```
 
 There is no polling. The app registers `AddClipboardFormatListener` on a hidden message window and

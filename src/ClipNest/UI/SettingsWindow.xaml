@@ -135,7 +135,7 @@
                                     <CheckBox x:Name="ManualOnlyCheck" Style="{StaticResource SoftCheckBox}"
                                               Content="仅手动收藏模式" Click="OnCaptureSettingChanged" />
                                     <TextBlock Style="{StaticResource FieldHelp}" Margin="24,4,0,0"
-                                               Text="开启后，普通复制不再入库，只有按「主动收藏」快捷键才会保存当前剪贴板内容。" />
+                                               Text="开启后，普通复制不再入库；只有按「历史选择并粘贴」快捷键时，才会把当时的剪贴板内容收进来。" />
                                 </StackPanel>
                             </Border>
 
@@ -220,14 +220,14 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="主动收藏剪贴板" />
+                                        <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="历史选择并粘贴" />
                                         <controls:HotKeyBox Grid.Column="1" x:Name="ManualHotKeyBox" GestureChanged="OnHotKeyGestureChanged" />
                                         <CheckBox Grid.Column="2" x:Name="ManualHotKeyEnabled" Style="{StaticResource SoftCheckBox}"
                                                   Content="启用" Margin="12,0,0,0" Click="OnHotKeyChanged" />
                                     </Grid>
 
                                     <TextBlock Style="{StaticResource FieldHelp}"
-                                               Text="全局快捷键是系统独占的：注册成功后，其他程序在本地按同一组合键会收不到。若提示冲突，换一个组合即可。点击输入框后直接按下组合键即可录制，Esc 清空。" />
+                                               Text="按下后会弹出历史记录菜单，选中一条即自动粘贴到刚才光标所在的输入框。全局快捷键是系统独占的：注册成功后，其他程序在本地按同一组合键会收不到，冲突时换一个组合即可。点击输入框后直接按下组合键即可录制，Esc 清空。" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>
