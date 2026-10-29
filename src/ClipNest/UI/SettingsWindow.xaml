@@ -4,10 +4,10 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:controls="clr-namespace:ClipNest.UI.Controls"
         Title="ClipNest 设置"
-        Width="660"
+        Width="596"
         SizeToContent="Height"
-        MinHeight="420"
-        MinWidth="600"
+        MinHeight="320"
+        MinWidth="520"
         WindowStyle="None"
         ResizeMode="CanResize"
         ShowInTaskbar="False"
@@ -341,18 +341,13 @@
                 </TabItem>
             </TabControl>
 
-            <!-- 底部：没有保存按钮，改动即时生效 -->
-            <Border Grid.Row="3" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,1,0,0"
-                    Padding="16,9">
-                <Grid>
-                    <TextBlock x:Name="ErrorText" VerticalAlignment="Center" FontSize="11.5"
-                               Foreground="{DynamicResource Danger}" TextWrapping="Wrap" MaxWidth="440"
-                               HorizontalAlignment="Left" />
-                    <TextBlock Text="改动即时生效，关闭窗口即可"
-                               VerticalAlignment="Center" FontSize="11"
-                               Foreground="{DynamicResource TextMuted}"
-                               HorizontalAlignment="Right" />
-                </Grid>
+            <!-- 底部：只在有校验错误时出现 -->
+            <Border x:Name="ErrorBar" Grid.Row="3"
+                    BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,1,0,0"
+                    Padding="16,9"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="ErrorText" VerticalAlignment="Center" FontSize="11.5"
+                           Foreground="{DynamicResource Danger}" TextWrapping="Wrap" />
             </Border>
         </Grid>
     </Border>

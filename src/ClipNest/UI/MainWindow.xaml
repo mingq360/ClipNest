@@ -5,8 +5,8 @@
         xmlns:vm="clr-namespace:ClipNest.UI.ViewModels"
         xmlns:infra="clr-namespace:ClipNest.UI.Infrastructure"
         Title="ClipNest"
-        Width="940" Height="640"
-        MinWidth="720" MinHeight="440"
+        Width="705" Height="480"
+        MinWidth="540" MinHeight="340"
         WindowStyle="None"
         ResizeMode="CanResize"
         ShowInTaskbar="False"
@@ -224,8 +224,15 @@
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
 
-                                            <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                                <TextBlock Text="置顶"
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                                           Text="置顶"
                                                            FontSize="10"
                                                            Foreground="{DynamicResource Accent}"
                                                            Background="{DynamicResource AccentSoft}"
@@ -233,18 +240,23 @@
                                                            Margin="0,0,4,0"
                                                            VerticalAlignment="Center"
                                                            Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}" />
-                                                <TextBlock Text="★"
+                                                <TextBlock Grid.Column="1"
+                                                           Text="★"
                                                            FontSize="10"
                                                            Foreground="{DynamicResource Accent}"
                                                            Margin="0,0,4,0"
                                                            VerticalAlignment="Center"
                                                            Visibility="{Binding IsStarred, Converter={StaticResource BoolToVis}}" />
-                                                <TextBlock Text="{Binding Preview}"
+
+                                                <!-- 必须放在 * 列里才能正确省略：StackPanel 不约束子元素宽度，
+                                                     文字会一直画到时间列下面再被硬切 -->
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding Preview}"
                                                            FontSize="12.5"
                                                            Foreground="{DynamicResource TextPrimary}"
                                                            TextTrimming="CharacterEllipsis"
                                                            VerticalAlignment="Center" />
-                                            </StackPanel>
+                                            </Grid>
 
                                             <TextBlock Grid.Row="1"
                                                        Text="{Binding MetaText}"
@@ -303,7 +315,7 @@
                                         Width="2"
                                         HorizontalAlignment="Center"
                                         CornerRadius="1"
-                                        Background="{DynamicResource BorderSoft}" />
+                                        Background="{DynamicResource BorderStrong}" />
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
@@ -328,38 +340,49 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <!-- 元信息 -->
-                        <Grid Grid.Row="0" Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SelectedRow.TypeName}"
-                                           FontSize="11.5"
+                        <!-- 元信息 + 操作：分两行，窗口缩窄后不会互相挤压 -->
+                        <StackPanel Grid.Row="0" Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding SelectedRow.TypeName}"
+                                           FontSize="11"
                                            Foreground="{DynamicResource Accent}"
                                            Background="{DynamicResource AccentSoft}"
                                            Padding="6,2"
                                            VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding SelectedRow.SourceText}"
-                                           Margin="8,0,0,0"
-                                           FontSize="11.5"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding SelectedRow.TimeText}"
-                                           Margin="8,0,0,0"
-                                           FontSize="11.5"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
 
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="复制" Style="{StaticResource GhostButton}" Height="24" Padding="10,0"
-                                        FontSize="11.5" Margin="0,0,4,0" Command="{Binding CopyCommand}" />
-                                <Button Content="置顶" Style="{StaticResource GhostButton}" Height="24" Padding="10,0"
-                                        FontSize="11.5" Margin="0,0,4,0" Command="{Binding TogglePinCommand}" />
-                                <Button Content="收藏" Style="{StaticResource GhostButton}" Height="24" Padding="10,0"
-                                        FontSize="11.5" Margin="0,0,4,0" Command="{Binding ToggleStarCommand}" />
-                                <Button Content="删除" Style="{StaticResource GhostButton}" Height="24" Padding="10,0"
-                                        FontSize="11.5" Command="{Binding DeleteCommand}" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding SelectedRow.SourceText}"
+                                           Margin="7,0,6,0"
+                                           FontSize="11"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding SelectedRow.TimeText}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="复制" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
+                                        FontSize="11" Margin="0,0,4,0" Command="{Binding CopyCommand}" />
+                                <Button Content="置顶" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
+                                        FontSize="11" Margin="0,0,4,0" Command="{Binding TogglePinCommand}" />
+                                <Button Content="收藏" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
+                                        FontSize="11" Margin="0,0,4,0" Command="{Binding ToggleStarCommand}" />
+                                <Button Content="删除" Style="{StaticResource GhostButton}" Height="23" Padding="9,0"
+                                        FontSize="11" Command="{Binding DeleteCommand}" />
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
 
                         <Border Grid.Row="1" Height="1" Margin="0,10,0,10" Background="{DynamicResource BorderSoft}"
                                 Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}" />
@@ -398,15 +421,24 @@
 
             <!-- ================= 状态栏 ================= -->
             <Grid Grid.Row="3" Margin="15,0,15,0">
-                <TextBlock Text="{Binding StatusText}"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusText}"
                            FontSize="11"
+                           TextTrimming="CharacterEllipsis"
                            Foreground="{DynamicResource TextMuted}"
                            VerticalAlignment="Center" />
-                <TextBlock FontSize="11"
+
+                <TextBlock Grid.Column="1"
+                           FontSize="10.5"
+                           Margin="10,0,0,0"
                            Foreground="{DynamicResource TextMuted}"
-                           HorizontalAlignment="Right"
                            VerticalAlignment="Center"
-                           Text="↑↓ 选择   Enter 复制   Ctrl+P 置顶   Ctrl+S 收藏   Del 删除   Esc 收起" />
+                           Text="↑↓ 选择 · Enter 复制 · Esc 收起" />
             </Grid>
         </Grid>
     </Border>
