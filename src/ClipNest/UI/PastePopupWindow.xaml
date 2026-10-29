@@ -121,8 +121,7 @@
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  VirtualizingStackPanel.IsVirtualizing="True"
-                                 VirtualizingStackPanel.VirtualizationMode="Recycling"
-                                 MouseDoubleClick="OnListDoubleClick">
+                                 VirtualizingStackPanel.VirtualizationMode="Recycling">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type vm:ClipRow}">
                                     <Grid Height="26">

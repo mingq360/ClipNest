@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ClipNest.Domain;
@@ -32,8 +33,20 @@ public partial class PastePopupWindow : Window
         _viewModel = new PickerViewModel(repository);
         DataContext = _viewModel;
 
-        Loaded += (_, _) => PositionNearCursor();
+        // 定位放在 SourceInitialized：这时句柄已建、DPI 已知，窗口还没绘制，
+        // 放在 Loaded 里会先出现在默认位置再跳一下
+        SourceInitialized += (_, _) => MoveToCursor();
+        Loaded += (_, _) =>
+        {
+            EnsureFitsOnScreen();
+            Activate();
+            SearchBox.Focus();
+        };
+
         Deactivated += OnDeactivated;
+
+        // 用 handledEventsToo 注册：即便 ListBoxItem 把 MouseUp 标成已处理，单击也要能选中并粘贴
+        HistoryList.AddHandler(MouseUpEvent, new MouseButtonEventHandler(OnListMouseUp), handledEventsToo: true);
 
         // 任何来源的关闭（我们的 Commit、Esc、外部调用）都先把标志立起来：
         // 关闭过程中还会收到一次失焦，那时再 Close() 会抛异常
@@ -46,7 +59,8 @@ public partial class PastePopupWindow : Window
 
     // ------------------------------------------------------------ 定位
 
-    private void PositionNearCursor()
+    /// <summary>左上角直接落在鼠标位置（和右键菜单一致），只做屏幕内夹取。</summary>
+    private void MoveToCursor()
     {
         try
         {
@@ -55,33 +69,42 @@ public partial class PastePopupWindow : Window
             if (workArea.Width <= 0) return;
 
             var dpi = VisualTreeHelper.GetDpi(this);
-            var scaleX = dpi.DpiScaleX;
-            var scaleY = dpi.DpiScaleY;
+            var x = cursor.X / dpi.DpiScaleX;
+            var y = cursor.Y / dpi.DpiScaleY;
 
             var width = ActualWidth > 0 ? ActualWidth : Width;
-            var height = ActualHeight > 0 ? ActualHeight : Height;
+            var workLeft = workArea.Left / dpi.DpiScaleX;
+            var workRight = workArea.Right / dpi.DpiScaleX;
+            var workTop = workArea.Top / dpi.DpiScaleY;
 
-            // 出现在鼠标右下，贴边时自动翻到另一侧
-            var left = cursor.X / scaleX + 6;
-            var top = cursor.Y / scaleY + 6;
-
-            var workLeft = workArea.Left / scaleX;
-            var workTop = workArea.Top / scaleY;
-            var workRight = workArea.Right / scaleX;
-            var workBottom = workArea.Bottom / scaleY;
-
-            if (left + width > workRight) left = cursor.X / scaleX - width - 6;
-            if (top + height > workBottom) top = workBottom - height;
-
-            Left = Math.Max(workLeft, left);
-            Top = Math.Max(workTop, top);
-
-            Activate();
-            SearchBox.Focus();
+            Left = Math.Max(workLeft, Math.Min(x, workRight - width));
+            Top = Math.Max(workTop, y);
         }
         catch (Exception ex)
         {
             Log.Error("历史菜单定位失败", ex);
+        }
+    }
+
+    /// <summary>高度是内容撑出来的，等布局完成后再纠一次底部越界。</summary>
+    private void EnsureFitsOnScreen()
+    {
+        try
+        {
+            var workArea = NativeMethods.GetCursorWorkArea();
+            if (workArea.Width <= 0 || ActualHeight <= 0) return;
+
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var workTop = workArea.Top / dpi.DpiScaleY;
+            var workBottom = workArea.Bottom / dpi.DpiScaleY;
+
+            if (Top + ActualHeight <= workBottom) return;
+
+            Top = Math.Max(workTop, workBottom - ActualHeight);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("历史菜单边界修正失败", ex);
         }
     }
 
@@ -130,7 +153,33 @@ public partial class PastePopupWindow : Window
         }
     }
 
-    private void OnListDoubleClick(object sender, MouseButtonEventArgs e) => Commit();
+    /// <summary>单击某一条就立刻粘贴，不用再按 Enter。</summary>
+    private void OnListMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_closing || e.ChangedButton != MouseButton.Left) return;
+
+        // 点在滚动条或空白处时找不到 ListBoxItem，按 DataContext 判定更稳
+        if (e.OriginalSource is not DependencyObject source) return;
+        if (FindAncestor<ListBoxItem>(source)?.DataContext is not ClipRow row) return;
+
+        _viewModel.SelectedRow = row;
+        e.Handled = true;
+        Commit();
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? node) where T : DependencyObject
+    {
+        while (node is not null)
+        {
+            if (node is T typed) return typed;
+
+            node = node is Visual or System.Windows.Media.Media3D.Visual3D
+                ? VisualTreeHelper.GetParent(node)
+                : LogicalTreeHelper.GetParent(node);
+        }
+
+        return null;
+    }
 
     /// <summary>选中项 → 写剪贴板 → 切回目标窗口 → 发 Ctrl+V。</summary>
     private async void Commit()
