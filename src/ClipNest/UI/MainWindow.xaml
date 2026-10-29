@@ -30,6 +30,21 @@
         <infra:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
         <infra:NotEmptyToVisibilityConverter x:Key="NotEmptyToVis" />
 
+        <!-- 用几何图形画图标，不依赖字体，任何缩放比下都清晰 -->
+        <!-- 设置：三条带滑块的横线，比齿轮在 16px 下更容易认出来 -->
+        <Geometry x:Key="SettingsIconGeometry">
+            M3.5,6.6 H6.2 M11.4,6.6 H20.5
+            M8.8,4.4 A2.2,2.2 0 1 1 8.79,4.4
+            M3.5,12 H12.4 M17.6,12 H20.5
+            M15,9.8 A2.2,2.2 0 1 1 14.99,9.8
+            M3.5,17.4 H7.4 M12.6,17.4 H20.5
+            M10,15.2 A2.2,2.2 0 1 1 9.99,15.2
+        </Geometry>
+
+        <Geometry x:Key="InfoIconGeometry">
+            M12,2.6 A9.4,9.4 0 1 1 11.99,2.6 M12,11 L12,16.6 M12,7.6 L12,7.7
+        </Geometry>
+
         <Style x:Key="ClipItemStyle" TargetType="ListBoxItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Padding" Value="0" />
@@ -80,13 +95,34 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,7,0">
-                    <Button Content="{Binding PauseLabel}"
-                            Command="{Binding TogglePauseCommand}"
-                            Style="{StaticResource GhostButton}"
-                            Height="24" Padding="9,0" FontSize="11.5"
-                            Margin="0,0,6,0" />
-                    <Button Content="设置" Style="{StaticResource IconButton}" Width="42" Click="OnSettingsClick" ToolTip="设置" />
-                    <Button Content="✕" Style="{StaticResource IconButton}" Width="30" Click="OnCloseClick" ToolTip="隐藏窗口 (Esc)" />
+                    <Button Command="{Binding TogglePauseCommand}"
+                            Style="{StaticResource IconButton}"
+                            Width="Auto" Padding="9,0" Margin="0,0,4,0"
+                            ToolTip="{Binding PauseLabel}">
+                        <TextBlock Text="{Binding PauseLabel}" FontSize="11.5" VerticalAlignment="Center" />
+                    </Button>
+
+                    <Button Style="{StaticResource IconButton}" Click="OnSettingsClick" ToolTip="设置">
+                        <Path Data="{StaticResource SettingsIconGeometry}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.5"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              Width="16" Height="16"
+                              Stretch="Uniform" />
+                    </Button>
+
+                    <Button Style="{StaticResource IconButton}" Click="OnAboutClick" ToolTip="关于">
+                        <Path Data="{StaticResource InfoIconGeometry}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.6"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              Width="16" Height="16"
+                              Stretch="Uniform" />
+                    </Button>
+
+                    <Button Content="✕" Style="{StaticResource IconButton}" Click="OnCloseClick" ToolTip="隐藏窗口 (Esc)" />
                 </StackPanel>
             </Grid>
 
@@ -132,8 +168,9 @@
             <!-- ================= 列表 + 预览 ================= -->
             <Grid Grid.Row="2" Margin="13,0,13,8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.12*" MinWidth="300" />
-                    <ColumnDefinition Width="1*" MinWidth="240" />
+                    <ColumnDefinition Width="1.12*" MinWidth="280" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="1*" MinWidth="220" />
                 </Grid.ColumnDefinitions>
 
                 <!-- 列表 -->
@@ -248,9 +285,38 @@
                     </Grid>
                 </Border>
 
+                <!-- 左右可拖动分隔条 -->
+                <GridSplitter Grid.Column="1"
+                              Width="9"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Stretch"
+                              ShowsPreview="False"
+                              Background="Transparent"
+                              Cursor="SizeWE"
+                              ToolTip="拖动可调整左右宽度">
+                    <GridSplitter.Template>
+                        <ControlTemplate TargetType="GridSplitter">
+                            <!-- 根元素必须有画刷，否则中间透明区域接不到鼠标 -->
+                            <Grid Background="{TemplateBinding Background}">
+                                <!-- 静止时也留一条淡线，否则用户不知道中间这条缝可以拖 -->
+                                <Border x:Name="Grip"
+                                        Width="2"
+                                        HorizontalAlignment="Center"
+                                        CornerRadius="1"
+                                        Background="{DynamicResource BorderSoft}" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Grip" Property="Background" Value="{DynamicResource Accent}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </GridSplitter.Template>
+                </GridSplitter>
+
                 <!-- 预览 -->
-                <Border Grid.Column="1"
-                        Margin="9,0,0,0"
+                <Border Grid.Column="2"
+                        Margin="0"
                         Background="{DynamicResource SurfaceBg}"
                         BorderBrush="{DynamicResource BorderSoft}"
                         BorderThickness="1"

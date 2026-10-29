@@ -45,6 +45,9 @@ public partial class App : Application
     private MainViewModel? _viewModel;
     private SettingsWindow? _settingsWindow;
 
+    private string _hotKeySignature = string.Empty;
+    private string? _lastHotKeyError;
+
     private bool _exiting;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -191,9 +194,10 @@ public partial class App : Application
 
     // ------------------------------------------------------------ 热键
 
-    private void RegisterHotKeys(bool showDialogOnFailure)
+    /// <summary>按当前配置注册全局热键；返回第一条失败原因，全部成功则返回 null。</summary>
+    private string? RegisterHotKeys(bool showDialogOnFailure)
     {
-        if (_hotKeys is null || _settings is null) return;
+        if (_hotKeys is null || _settings is null) return null;
 
         _hotKeys.UnregisterAll();
 
@@ -214,18 +218,42 @@ public partial class App : Application
             failures.Add(captureError);
         }
 
-        if (_viewModel is not null)
+        var summary = failures.Count == 0 ? null : string.Join("；", failures);
+
+        if (_viewModel is not null) _viewModel.Notice = summary;
+
+        if (summary is not null && showDialogOnFailure)
         {
-            _viewModel.Notice = failures.Count == 0 ? null : string.Join("；", failures);
+            MessageBox.Show(
+                string.Join("\n", failures) + "\n\n可以到「设置 · 快捷键」里换一个组合键。",
+                "快捷键注册失败",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
 
-        if (failures.Count == 0 || !showDialogOnFailure) return;
+        return summary;
+    }
 
-        MessageBox.Show(
-            string.Join("\n", failures) + "\n\n可以到「设置 → 快捷键」里换一个组合键。",
-            "快捷键注册失败",
-            MessageBoxButton.OK,
-            MessageBoxImage.Warning);
+    /// <summary>
+    /// 设置窗口每次改动后回调：开关监听 + 按需重注册热键。
+    /// 热键没变就不重复注册 —— 否则用户只是勾了个复选框，也会把热键短暂释放给别的程序抢走。
+    /// </summary>
+    private string? ApplyLiveSettings()
+    {
+        ApplyMonitorState();
+
+        if (_settings is null) return null;
+
+        var hotKeys = _settings.Current.HotKeys;
+        var signature = string.Join("|",
+            hotKeys.ToggleWindowEnabled ? hotKeys.ToggleWindow : "-",
+            hotKeys.ManualCaptureEnabled ? hotKeys.ManualCapture : "-");
+
+        if (signature == _hotKeySignature) return _lastHotKeyError;
+
+        _hotKeySignature = signature;
+        _lastHotKeyError = RegisterHotKeys(showDialogOnFailure: false);
+        return _lastHotKeyError;
     }
 
     private void CaptureCurrentClipboard()
@@ -288,27 +316,22 @@ public partial class App : Application
         // 设置窗口是模态的，期间主窗口不能因为失焦而自动隐藏
         using (_mainWindow.SuppressAutoHide())
         {
-            var window = new SettingsWindow(_settings, _clipService, _themeService, firstRun);
+            // 传一个回调进去：设置窗口每改一项就调它，热键冲突之类的错误直接显示在窗口里
+            var window = new SettingsWindow(
+                _settings, _clipService, _themeService, firstRun, ApplyLiveSettings);
+
             if (_mainWindow.IsVisible) window.Owner = _mainWindow;
 
             _settingsWindow = window;
-            window.Saved += OnSettingsSaved;
             window.DataCleared += (_, _) => _viewModel?.Reload();
             window.Closed += (_, _) =>
             {
-                window.Saved -= OnSettingsSaved;
                 _settingsWindow = null;
+                _viewModel?.Reload();
             };
 
             window.ShowDialog();
         }
-    }
-
-    private void OnSettingsSaved(object? sender, EventArgs e)
-    {
-        ApplyMonitorState();
-        RegisterHotKeys(showDialogOnFailure: true);
-        _viewModel?.Reload();
     }
 
     /// <summary>托盘菜单里的「清空未收藏的片段」。会二次确认，不可撤销。</summary>

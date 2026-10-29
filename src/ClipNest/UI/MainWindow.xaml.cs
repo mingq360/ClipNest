@@ -49,7 +49,7 @@ public partial class MainWindow : Window
         HideWindow();
     }
 
-    /// <summary>显示在主窗口旁（鼠标所在显示器），并聚焦搜索框。</summary>
+    /// <summary>显示在鼠标所在显示器的正中，并聚焦搜索框。</summary>
     public void ShowNearCursor()
     {
         if (!IsVisible)
@@ -59,7 +59,7 @@ public partial class MainWindow : Window
             Show();
         }
 
-        PositionOnCursorScreen();
+        CenterOnCursorScreen();
         Opacity = 1;
 
         Activate();
@@ -90,7 +90,8 @@ public partial class MainWindow : Window
         SearchBox.CaretIndex = SearchBox.Text.Length;
     }
 
-    private void PositionOnCursorScreen()
+    /// <summary>在工作区内居中，而不是贴在屏幕上沿。</summary>
+    private void CenterOnCursorScreen()
     {
         try
         {
@@ -106,9 +107,8 @@ public partial class MainWindow : Window
             var width = ActualWidth > 0 ? ActualWidth : Width;
             var height = ActualHeight > 0 ? ActualHeight : Height;
 
-            // 水平居中，垂直放在上方 1/5 处：视线落点自然，也不会挡住刚复制的内容
             Left = workLeft + (workWidth - width) / 2;
-            Top = workTop + Math.Max(24, (workHeight - height) / 4);
+            Top = workTop + (workHeight - height) / 2;
 
             Left = Math.Max(workLeft, Math.Min(Left, workLeft + workWidth - width));
             Top = Math.Max(workTop, Math.Min(Top, workTop + workHeight - height));
@@ -144,6 +144,16 @@ public partial class MainWindow : Window
     private void OnCloseClick(object sender, RoutedEventArgs e) => HideWindow();
 
     private void OnSettingsClick(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnAboutClick(object sender, RoutedEventArgs e)
+    {
+        // 弹关于窗口时主窗口会失焦，得先屏蔽自动隐藏，否则窗口在弹窗后面消失
+        using (SuppressAutoHide())
+        {
+            var about = new AboutWindow { Owner = this };
+            about.ShowDialog();
+        }
+    }
 
     private void OnListDoubleClick(object sender, MouseButtonEventArgs e)
     {

@@ -148,11 +148,13 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="6">
-                        <ScrollViewer x:Name="PART_ContentHost"
-                                      Margin="{TemplateBinding Padding}"
-                                      VerticalAlignment="Center" />
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" />
                     </Border>
                     <ControlTemplate.Triggers>
+                        <!-- 单行框里文字垂直居中好看；多行框必须拉伸，否则内容会被顶到中间、上方留一大片空白 -->
+                        <Trigger Property="AcceptsReturn" Value="False">
+                            <Setter TargetName="PART_ContentHost" Property="VerticalAlignment" Value="Center" />
+                        </Trigger>
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
                             <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Accent}" />
                         </Trigger>
@@ -344,32 +346,37 @@
     <!-- ============ 顶部选项卡 ============ -->
     <Style x:Key="TopTabItem" TargetType="TabItem">
         <Setter Property="FontFamily" Value="{StaticResource FontUi}" />
-        <Setter Property="FontSize" Value="12.5" />
-        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        <Setter Property="FontSize" Value="13.5" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TabItem">
-                    <Grid>
-                        <Border x:Name="Root" Background="Transparent" Padding="14,0">
+                    <Grid Margin="2,0">
+                        <Border x:Name="Root"
+                                Background="Transparent"
+                                CornerRadius="7"
+                                Margin="0,6"
+                                Padding="16,0">
                             <ContentPresenter ContentSource="Header"
                                               VerticalAlignment="Center"
                                               HorizontalAlignment="Center" />
                         </Border>
                         <Border x:Name="Underline"
-                                Height="2"
+                                Height="2.5"
                                 VerticalAlignment="Bottom"
                                 Background="Transparent"
-                                CornerRadius="1"
-                                Margin="8,0" />
+                                CornerRadius="1.5"
+                                Margin="12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource HoverBg}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Foreground" Value="{DynamicResource Accent}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter TargetName="Underline" Property="Background" Value="{DynamicResource Accent}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -387,7 +394,7 @@
                 <ControlTemplate TargetType="TabControl">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="42" />
+                            <RowDefinition Height="48" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
@@ -396,7 +403,7 @@
                                 BorderBrush="{DynamicResource BorderSoft}"
                                 BorderThickness="0,0,0,1">
                             <TabPanel IsItemsHost="True"
-                                      Margin="8,0,0,0"
+                                      Margin="10,0,0,0"
                                       Background="Transparent"
                                       VerticalAlignment="Stretch" />
                         </Border>

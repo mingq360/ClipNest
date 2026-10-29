@@ -4,12 +4,14 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:controls="clr-namespace:ClipNest.UI.Controls"
         Title="ClipNest 设置"
-        Width="660" Height="672"
-        MinWidth="580" MinHeight="520"
+        Width="660"
+        SizeToContent="Height"
+        MinHeight="420"
+        MinWidth="600"
         WindowStyle="None"
         ResizeMode="CanResize"
         ShowInTaskbar="False"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowBg}"
         Icon="{StaticResource AppIconImage}"
         FontFamily="{StaticResource FontUi}"
@@ -70,8 +72,8 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="56" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- 标题栏 -->
@@ -82,7 +84,7 @@
                                Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
                 </StackPanel>
                 <Button Content="✕" Style="{StaticResource IconButton}" HorizontalAlignment="Right"
-                        Margin="0,0,7,0" Click="OnCancelClick" />
+                        Margin="0,0,7,0" Click="OnCloseClick" ToolTip="关闭 (Esc)" />
             </Grid>
 
             <!-- 首次启动引导 -->
@@ -109,12 +111,12 @@
                             <Border Style="{StaticResource Section}">
                                 <StackPanel>
                                     <CheckBox x:Name="EnableMonitorCheck" Style="{StaticResource SoftCheckBox}"
-                                              Content="启用剪贴板监听" />
+                                              Content="启用剪贴板监听" Click="OnCaptureSettingChanged" />
                                     <TextBlock Style="{StaticResource FieldHelp}" Margin="24,4,0,12"
                                                Text="关闭后完全停止采集，效果等同于一直暂停。" />
 
                                     <CheckBox x:Name="ManualOnlyCheck" Style="{StaticResource SoftCheckBox}"
-                                              Content="仅手动收藏模式" />
+                                              Content="仅手动收藏模式" Click="OnCaptureSettingChanged" />
                                     <TextBlock Style="{StaticResource FieldHelp}" Margin="24,4,0,0"
                                                Text="开启后，普通复制不再入库，只有按「主动收藏」快捷键才会保存当前剪贴板内容。" />
                                 </StackPanel>
@@ -127,7 +129,9 @@
                                         <TextBlock Style="{StaticResource FieldLabel}" Text="最多保存" />
                                         <TextBox x:Name="MaxItemsBox" Style="{StaticResource PlainTextBox}"
                                                  Width="94" Margin="8,0" TextAlignment="Right"
-                                                 FontFamily="{StaticResource FontMono}" />
+                                                 FontFamily="{StaticResource FontMono}"
+                                                 LostFocus="OnNumericSettingChanged"
+                                                 KeyDown="OnNumericBoxKeyDown" />
                                         <TextBlock Style="{StaticResource FieldLabel}" Text="条" />
                                     </StackPanel>
                                     <TextBlock Style="{StaticResource FieldHelp}"
@@ -137,7 +141,9 @@
                                         <TextBlock Style="{StaticResource FieldLabel}" Text="单条最多" />
                                         <TextBox x:Name="MaxCharsBox" Style="{StaticResource PlainTextBox}"
                                                  Width="94" Margin="8,0" TextAlignment="Right"
-                                                 FontFamily="{StaticResource FontMono}" />
+                                                 FontFamily="{StaticResource FontMono}"
+                                                 LostFocus="OnNumericSettingChanged"
+                                                 KeyDown="OnNumericBoxKeyDown" />
                                         <TextBlock Style="{StaticResource FieldLabel}" Text="字符" />
                                     </StackPanel>
                                     <TextBlock Style="{StaticResource FieldHelp}"
@@ -157,10 +163,12 @@
                                     <TextBlock Text="不采集以下应用" Style="{StaticResource SectionTitle}" />
                                     <TextBlock Style="{StaticResource FieldLabel}" Text="每行一个进程名" />
                                     <TextBox x:Name="ExcludedAppsBox" Style="{StaticResource PlainTextBox}"
-                                             Margin="0,8,0,0" Height="190"
+                                             Margin="0,8,0,0" Height="170"
                                              AcceptsReturn="True" TextWrapping="NoWrap"
                                              VerticalScrollBarVisibility="Auto"
-                                             FontFamily="{StaticResource FontMono}" FontSize="12" />
+                                             VerticalContentAlignment="Top"
+                                             FontFamily="{StaticResource FontMono}" FontSize="12"
+                                             LostFocus="OnExcludedAppsChanged" />
                                     <TextBlock Style="{StaticResource FieldHelp}"
                                                Text="写成 1password 或 1password.exe 都行，忽略大小写。注意：这只能区分程序，区分不了浏览器里打开的网页版密码管理器 —— 遇到那种情况请用「暂停采集」。" />
                                 </StackPanel>
@@ -184,9 +192,9 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="唤起主窗口" />
-                                        <controls:HotKeyBox Grid.Column="1" x:Name="ToggleHotKeyBox" />
+                                        <controls:HotKeyBox Grid.Column="1" x:Name="ToggleHotKeyBox" GestureChanged="OnHotKeyGestureChanged" />
                                         <CheckBox Grid.Column="2" x:Name="ToggleHotKeyEnabled" Style="{StaticResource SoftCheckBox}"
-                                                  Content="启用" Margin="12,0,0,0" />
+                                                  Content="启用" Margin="12,0,0,0" Click="OnHotKeyChanged" />
                                     </Grid>
 
                                     <Grid>
@@ -196,9 +204,9 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="主动收藏剪贴板" />
-                                        <controls:HotKeyBox Grid.Column="1" x:Name="ManualHotKeyBox" />
+                                        <controls:HotKeyBox Grid.Column="1" x:Name="ManualHotKeyBox" GestureChanged="OnHotKeyGestureChanged" />
                                         <CheckBox Grid.Column="2" x:Name="ManualHotKeyEnabled" Style="{StaticResource SoftCheckBox}"
-                                                  Content="启用" Margin="12,0,0,0" />
+                                                  Content="启用" Margin="12,0,0,0" Click="OnHotKeyChanged" />
                                     </Grid>
 
                                     <TextBlock Style="{StaticResource FieldHelp}"
@@ -257,15 +265,20 @@
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
                                                 <StackPanel Width="74" Margin="0,2">
-                                                    <Grid Width="40" Height="40" HorizontalAlignment="Center">
-                                                        <Border x:Name="Dot"
-                                                                CornerRadius="20"
+                                                    <Grid Width="48" Height="46" HorizontalAlignment="Center">
+                                                        <!-- 选中环画在色块外面：同色环压在色块边缘上根本看不见 -->
+                                                        <Border x:Name="Ring"
+                                                                Width="46" Height="46"
+                                                                CornerRadius="23"
                                                                 BorderThickness="2"
-                                                                BorderBrush="Transparent"
+                                                                BorderBrush="Transparent" />
+                                                        <Border x:Name="Dot"
+                                                                Width="34" Height="34"
+                                                                CornerRadius="17"
                                                                 Background="{Binding BaseBrush}" />
                                                         <TextBlock x:Name="Tick"
                                                                    Text="✓"
-                                                                   FontSize="15"
+                                                                   FontSize="14"
                                                                    Foreground="White"
                                                                    HorizontalAlignment="Center"
                                                                    VerticalAlignment="Center"
@@ -273,13 +286,13 @@
                                                     </Grid>
                                                     <TextBlock Text="{Binding DisplayName}"
                                                                FontSize="11"
-                                                               Margin="0,5,0,0"
+                                                               Margin="0,3,0,0"
                                                                HorizontalAlignment="Center"
                                                                Foreground="{DynamicResource TextSecondary}" />
                                                 </StackPanel>
                                                 <DataTemplate.Triggers>
                                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                                        <Setter TargetName="Dot" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                                                        <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource Accent}" />
                                                         <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
                                                     </DataTrigger>
                                                 </DataTemplate.Triggers>
@@ -288,7 +301,7 @@
                                     </ListBox>
 
                                     <TextBlock Style="{StaticResource FieldHelp}"
-                                               Text="主题色用于强调、选中态与按钮。改动会立即生效，点「取消」可还原。" />
+                                               Text="主题色用于强调、选中态与按钮，改动立即生效。" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -302,9 +315,10 @@
                             <Border Style="{StaticResource Section}">
                                 <StackPanel>
                                     <TextBlock Text="启动与窗口" Style="{StaticResource SectionTitle}" />
-                                    <CheckBox x:Name="AutoStartCheck" Style="{StaticResource SoftCheckBox}" Content="开机自动启动" />
+                                    <CheckBox x:Name="AutoStartCheck" Style="{StaticResource SoftCheckBox}"
+                                              Content="开机自动启动" Click="OnAutoStartChanged" />
                                     <CheckBox x:Name="HideOnLostFocusCheck" Style="{StaticResource SoftCheckBox}"
-                                              Content="窗口失去焦点时自动隐藏" Margin="0,10,0,0" />
+                                              Content="窗口失去焦点时自动隐藏" Margin="0,10,0,0" Click="OnCaptureSettingChanged" />
                                 </StackPanel>
                             </Border>
 
@@ -327,16 +341,17 @@
                 </TabItem>
             </TabControl>
 
-            <!-- 底部按钮 -->
-            <Border Grid.Row="3" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,1,0,0">
-                <Grid Margin="16,0">
+            <!-- 底部：没有保存按钮，改动即时生效 -->
+            <Border Grid.Row="3" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,1,0,0"
+                    Padding="16,9">
+                <Grid>
                     <TextBlock x:Name="ErrorText" VerticalAlignment="Center" FontSize="11.5"
-                               Foreground="{DynamicResource Danger}" TextWrapping="Wrap" MaxWidth="380"
+                               Foreground="{DynamicResource Danger}" TextWrapping="Wrap" MaxWidth="440"
                                HorizontalAlignment="Left" />
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="取消" Style="{StaticResource GhostButton}" Padding="18,7" Click="OnCancelClick" />
-                        <Button Content="保存" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0" Click="OnSaveClick" />
-                    </StackPanel>
+                    <TextBlock Text="改动即时生效，关闭窗口即可"
+                               VerticalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource TextMuted}"
+                               HorizontalAlignment="Right" />
                 </Grid>
             </Border>
         </Grid>

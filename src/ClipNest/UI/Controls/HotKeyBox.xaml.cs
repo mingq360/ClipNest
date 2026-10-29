@@ -27,6 +27,9 @@ public partial class HotKeyBox : UserControl
         UpdateVisual();
     }
 
+    /// <summary>录制到新组合键时触发（程序化赋值也会触发，调用方按需忽略）。</summary>
+    public event EventHandler? GestureChanged;
+
     /// <summary>形如 "Ctrl+Alt+V"。空字符串表示未设置。</summary>
     public string Gesture
     {
@@ -35,7 +38,11 @@ public partial class HotKeyBox : UserControl
     }
 
     private static void OnGestureChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        => ((HotKeyBox)d).UpdateVisual();
+    {
+        var box = (HotKeyBox)d;
+        box.UpdateVisual();
+        box.GestureChanged?.Invoke(box, EventArgs.Empty);
+    }
 
     private void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
