@@ -12,7 +12,7 @@ offline, on your own disk, in a single SQLite file.
 [![UI](https://img.shields.io/badge/UI-WPF-512BD4)](#)
 [![Tests](https://img.shields.io/badge/tests-66%20passing-2C7A6B)](#build--test)
 [![Network](https://img.shields.io/badge/network-0%20requests-2C7A6B)](#privacy)
-[![License](https://img.shields.io/badge/license-TBD-lightgrey)](#license)
+[![License](https://img.shields.io/badge/license-MIT-2C7A6B)](LICENSE)
 
 **English** · [简体中文](README.zh-CN.md)
 
@@ -172,5 +172,6 @@ above, which were caught and fixed while writing this code rather than after shi
 
 ## License
 
-No license has been chosen yet, which means all rights are reserved by default. If you want to use
-any of this, open an issue and we will sort it out.
+MIT. Take it, fork it, ship it — just keep the copyright notice.
+
+See [LICENSE](LICENSE) for the full text.

@@ -12,7 +12,7 @@
 [![UI](https://img.shields.io/badge/UI-WPF-512BD4)](#)
 [![Tests](https://img.shields.io/badge/tests-66%20passing-2C7A6B)](#构建与测试)
 [![Network](https://img.shields.io/badge/network-0%20requests-2C7A6B)](#隐私)
-[![License](https://img.shields.io/badge/license-TBD-lightgrey)](#许可证)
+[![License](https://img.shields.io/badge/license-MIT-2C7A6B)](LICENSE)
 
 [English](README.md) · **简体中文**
 
@@ -164,4 +164,6 @@ docs/                需求文档与方案设计文档
 
 ## 许可证
 
-尚未选定开源许可证，因此在选出之前默认保留所有权利。想用其中任何部分，开个 issue 我们商量。
+MIT。随便用、随便改、随便发，保留版权声明即可。
+
+完整条款见 [LICENSE](LICENSE)。
