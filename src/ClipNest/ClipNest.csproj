@@ -8,7 +8,7 @@
     <AssemblyName>ClipNest</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>app.ico</ApplicationIcon>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Product>ClipNest</Product>
     <Description>本地优先的个人碎片信息收集工具</Description>
     <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>

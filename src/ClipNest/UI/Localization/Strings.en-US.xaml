@@ -92,6 +92,7 @@ This cannot be undone. Continue?</s:String>
     <s:String x:Key="Str_Star">Favorite</s:String>
     <s:String x:Key="Str_Delete">Delete</s:String>
     <s:String x:Key="Str_Save">Save</s:String>
+    <s:String x:Key="Str_SaveHint">Save (Ctrl+S)</s:String>
     <s:String x:Key="Str_Back">Back</s:String>
     <s:String x:Key="Str_Forward">Forward</s:String>
     <s:String x:Key="Str_Source">Source</s:String>
@@ -112,6 +113,8 @@ This cannot be undone. Continue?</s:String>
     <s:String x:Key="Str_Storage">Storage</s:String>
     <s:String x:Key="Str_DataLabel">Data</s:String>
     <s:String x:Key="Str_License">License</s:String>
+    <s:String x:Key="Str_Author">Author</s:String>
+    <s:String x:Key="Str_Email">Email</s:String>
     <s:String x:Key="Str_ViewSource">View source</s:String>
     <s:String x:Key="Str_Close">Close</s:String>
     <s:String x:Key="Str_ErrOpenSource">Could not open the GitHub page</s:String>

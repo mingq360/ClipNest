@@ -54,10 +54,10 @@
         <!-- 来源：一个地球，表示"来自哪个应用" -->
         <Geometry x:Key="SourceIconGeometry">M12,4 A8,8 0 1 0 12,20 A8,8 0 1 0 12,4 M12,4 C15,8 15,16 12,20 M12,4 C9,8 9,16 12,20 M4,12 H20</Geometry>
 
-        <!-- 详情页编辑操作：保存 / 后退 / 前进 -->
-        <Geometry x:Key="SaveIconGeometry">M5,4 H14 L19,9 V20 H5 Z M8,4 V9 H15 M8,13 H16 V19 H8 Z</Geometry>
-        <Geometry x:Key="BackIconGeometry">M11,7 L6,12 L11,17 M6,12 H16 A5,5 0 0 1 16,17</Geometry>
-        <Geometry x:Key="ForwardIconGeometry">M13,7 L18,12 L13,17 M18,12 H8 A5,5 0 0 1 8,17</Geometry>
+        <!-- 详情页编辑操作：保存（软盘）/ 后退（撤销，逆时针）/ 前进（重做，顺时针） -->
+        <Geometry x:Key="SaveIconGeometry">M4,4 H16 L20,8 V20 H4 Z M8,4 V9 H15 M8,13 H16 V19 H8 Z</Geometry>
+        <Geometry x:Key="BackIconGeometry">M9,7 L5,11 L9,15 M5,11 H13 C16,11 17,13 17,16</Geometry>
+        <Geometry x:Key="ForwardIconGeometry">M15,7 L19,11 L15,15 M19,11 H11 C8,11 7,13 7,16</Geometry>
 
         <!-- 标题栏暂停按钮：运行中=实心圆点，已暂停=双竖条 -->
         <Geometry x:Key="PauseRunningGeometry">M12,5 A7,7 0 1 0 12,19 A7,7 0 1 0 12,5 Z</Geometry>
@@ -418,7 +418,7 @@
                                 <!-- 编辑操作：保存 / 后退（撤销）/ 前进（重做） -->
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                                     <Button Style="{StaticResource IconButton}" Width="30" Height="26" Margin="0,0,2,0"
-                                            ToolTip="{DynamicResource Str_Save}" Command="{Binding SaveCommand}">
+                                            ToolTip="{DynamicResource Str_SaveHint}" Command="{Binding SaveCommand}">
                                         <Path Data="{StaticResource SaveIconGeometry}" Width="15" Height="15" Stretch="Uniform"
                                               Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                               StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
@@ -509,6 +509,7 @@
                                  AcceptsReturn="True"
                                  AcceptsTab="True"
                                  TextWrapping="Wrap"
+                                 TextBlock.LineHeight="18"
                                  IsUndoEnabled="True"
                                  UndoLimit="100"
                                  BorderThickness="0"

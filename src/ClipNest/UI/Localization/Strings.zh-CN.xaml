@@ -92,6 +92,7 @@
     <s:String x:Key="Str_Star">收藏</s:String>
     <s:String x:Key="Str_Delete">删除</s:String>
     <s:String x:Key="Str_Save">保存</s:String>
+    <s:String x:Key="Str_SaveHint">保存 (Ctrl+S)</s:String>
     <s:String x:Key="Str_Back">后退</s:String>
     <s:String x:Key="Str_Forward">前进</s:String>
     <s:String x:Key="Str_Source">来源</s:String>
@@ -112,6 +113,8 @@
     <s:String x:Key="Str_Storage">存储</s:String>
     <s:String x:Key="Str_DataLabel">数据</s:String>
     <s:String x:Key="Str_License">协议</s:String>
+    <s:String x:Key="Str_Author">作者</s:String>
+    <s:String x:Key="Str_Email">邮箱</s:String>
     <s:String x:Key="Str_ViewSource">查看源码</s:String>
     <s:String x:Key="Str_Close">关闭</s:String>
     <s:String x:Key="Str_ErrOpenSource">打开 GitHub 页面失败</s:String>

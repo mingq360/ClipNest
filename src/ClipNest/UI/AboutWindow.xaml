@@ -83,6 +83,8 @@
                     <RowDefinition Height="24" />
                     <RowDefinition Height="24" />
                     <RowDefinition Height="24" />
+                    <RowDefinition Height="24" />
+                    <RowDefinition Height="24" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Str_Runtime}" Style="{StaticResource MetaLabel}" />
@@ -97,6 +99,17 @@
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="{DynamicResource Str_License}" Style="{StaticResource MetaLabel}" />
                 <TextBlock Grid.Row="3" Grid.Column="1" Text="MIT License" Style="{StaticResource MetaValue}" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{DynamicResource Str_Author}" Style="{StaticResource MetaLabel}" />
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="Ming.Kou" Style="{StaticResource MetaValue}" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="{DynamicResource Str_Email}" Style="{StaticResource MetaLabel}" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource MetaValue}">
+                    <Hyperlink NavigateUri="mailto:MingQ360@163.com"
+                               RequestNavigate="OnEmailNavigate"
+                               Foreground="{DynamicResource Accent}"
+                               TextDecorations="None">MingQ360@163.com</Hyperlink>
+                </TextBlock>
             </Grid>
 
             <!-- 分隔 -->

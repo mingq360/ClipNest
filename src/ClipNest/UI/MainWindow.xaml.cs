@@ -195,8 +195,8 @@ public partial class MainWindow : Window
 
     private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // 正文可编辑：编辑框内时把按键交给文本框（删除字符、撤销/重做等正常编辑），
-        // 仅 Ctrl+S 特意映射为「保存修改」，与图标按钮保持一致。
+        // 正文可编辑：编辑框内时把按键交给文本框（删除字符、撤销/重做等正常编辑）。
+        // Ctrl+S 是全局「保存」：只要有未保存修改，窗口内任意位置按下都能保存。
         var contentFocused = ContentBox.IsKeyboardFocusWithin;
 
         if (e.Key == Key.Escape)
@@ -210,21 +210,26 @@ public partial class MainWindow : Window
 
         if (Keyboard.Modifiers == ModifierKeys.Control)
         {
-            if (e.Key == Key.S && contentFocused)
+            // Ctrl+S：只要有未保存的修改，就在窗口任意位置保存，不必先点进编辑框；
+            // 没有未保存修改时，编辑框外仍沿用作「收藏」的旧语义，编辑框内则交还文本框。
+            if (e.Key == Key.S)
             {
-                if (_viewModel.SaveCommand.CanExecute(null)) _viewModel.SaveCommand.Execute(null);
-                e.Handled = true;
-                return;
+                if (_viewModel.IsDirty)
+                {
+                    if (_viewModel.SaveCommand.CanExecute(null)) _viewModel.SaveCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                }
+                if (!contentFocused)
+                {
+                    _viewModel.ToggleStar();
+                    e.Handled = true;
+                    return;
+                }
             }
             if (e.Key == Key.P && !contentFocused)
             {
                 _viewModel.TogglePin();
-                e.Handled = true;
-                return;
-            }
-            if (e.Key == Key.S && !contentFocused)
-            {
-                _viewModel.ToggleStar();
                 e.Handled = true;
                 return;
             }

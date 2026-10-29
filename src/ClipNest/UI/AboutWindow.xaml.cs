@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Navigation;
 using ClipNest.Infrastructure.Data;
 using ClipNest.Infrastructure.Diagnostics;
 using ClipNest.UI.Localization;
@@ -50,6 +51,23 @@ public partial class AboutWindow : Window
         {
             Log.Error(Loc.Get("Str_ErrOpenSource"), ex);
         }
+    }
+
+    private void OnEmailNavigate(object sender, RequestNavigateEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = e.Uri.AbsoluteUri,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Error("打开邮箱失败", ex);
+        }
+        e.Handled = true;
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
