@@ -10,7 +10,7 @@ offline, on your own disk, in a single SQLite file.
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?logo=windows11&logoColor=white)](#requirements)
 [![UI](https://img.shields.io/badge/UI-WPF-512BD4)](#)
-[![Tests](https://img.shields.io/badge/tests-66%20passing-2C7A6B)](#build--test)
+[![Tests](https://img.shields.io/badge/tests-77%20passing-2C7A6B)](#build--test)
 [![Network](https://img.shields.io/badge/network-0%20requests-2C7A6B)](#privacy)
 [![License](https://img.shields.io/badge/license-MIT-2C7A6B)](LICENSE)
 
@@ -159,7 +159,7 @@ dotnet build ClipNest.sln
 dotnet test tests/ClipNest.Tests
 ```
 
-66 tests cover the repository layer, schema migrations, the classifier, the fingerprinting rules, and
+77 tests cover the repository layer, schema migrations, the classifier, the fingerprinting rules, and
 the capture orchestration (pause, denylist, dedupe, truncation, capacity pruning).
 
 ```
@@ -168,12 +168,34 @@ src/ClipNest/
 ├── Services/         capture orchestration, settings, hotkey grammar
 ├── Infrastructure/   SQLite, clipboard listener, foreground tracker, hotkeys, logging
 └── UI/               main window, settings, tray, view models
-tests/ClipNest.Tests/ 66 tests
+tests/ClipNest.Tests/ 77 tests
 docs/                  requirements and design docs (Chinese)
 ```
 
 The design docs in `docs/` record the decisions *and* the corrections — including the three bugs
 above, which were caught and fixed while writing this code rather than after shipping it.
+
+## Package
+
+```powershell
+.\publish.ps1
+```
+
+Produces **one file**: `artifacts/publish/win-x64/ClipNest.exe` (~65 MB). Self-contained, so it runs
+on any Windows 10/11 machine with nothing installed — copy it to a USB stick and it works.
+
+```powershell
+.\publish.ps1 -FrameworkDependent   # ~3 MB, needs the .NET 8 Desktop Runtime
+.\publish.ps1 -Runtime win-arm64    # for ARM64 devices
+```
+
+Two notes on the build:
+
+- **No trimming.** `PublishTrimmed` is not supported for WPF — it breaks XAML reflection. Size comes
+  from single-file compression instead.
+- **Native libraries are extracted at first run** (`IncludeNativeLibrariesForSelfExtract`), because
+  SQLite's `e_sqlite3.dll` cannot be loaded from inside the bundle. They land in
+  `%TEMP%\.net\ClipNest\…` and are reused on later launches.
 
 ## License
 

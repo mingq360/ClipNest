@@ -10,7 +10,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?logo=windows11&logoColor=white)](#环境要求)
 [![UI](https://img.shields.io/badge/UI-WPF-512BD4)](#)
-[![Tests](https://img.shields.io/badge/tests-66%20passing-2C7A6B)](#构建与测试)
+[![Tests](https://img.shields.io/badge/tests-77%20passing-2C7A6B)](#构建与测试)
 [![Network](https://img.shields.io/badge/network-0%20requests-2C7A6B)](#隐私)
 [![License](https://img.shields.io/badge/license-MIT-2C7A6B)](LICENSE)
 
@@ -148,7 +148,7 @@ dotnet build ClipNest.sln
 dotnet test tests/ClipNest.Tests
 ```
 
-66 个测试覆盖仓储层、库结构迁移、类型判定、指纹规则，以及采集编排（暂停、排除名单、去重、
+77 个测试覆盖仓储层、库结构迁移、类型判定、指纹规则，以及采集编排（暂停、排除名单、去重、
 超长截断、容量清理）。
 
 ```
@@ -157,12 +157,32 @@ src/ClipNest/
 ├── Services/         采集编排、配置、快捷键文法
 ├── Infrastructure/   SQLite、剪贴板监听、前台窗口跟踪、热键、日志
 └── UI/               主窗口、设置、托盘、视图模型
-tests/ClipNest.Tests/ 66 个用例
+tests/ClipNest.Tests/ 77 个用例
 docs/                需求文档与方案设计文档
 ```
 
 `docs/` 里那两份文档记录了决策过程**和**修正记录——包括上面三个坑，都是写代码时发现并改掉的，
 不是上线之后才踩到的。
+
+## 打包
+
+```powershell
+.\publish.ps1
+```
+
+产出**单个文件**：`artifacts/publish/win-x64/ClipNest.exe`（约 65 MB）。自包含，目标机器什么
+都不用装，拷到 U 盘就能跑。
+
+```powershell
+.\publish.ps1 -FrameworkDependent   # 约 3 MB，但要求目标机器装了 .NET 8 桌面运行时
+.\publish.ps1 -Runtime win-arm64    # ARM64 设备
+```
+
+两点说明：
+
+- **不做裁剪**。WPF 不支持 `PublishTrimmed`（会破坏 XAML 反射），体积靠单文件压缩压下来。
+- **原生库首次运行会解压**（`IncludeNativeLibrariesForSelfExtract`），因为 SQLite 的
+  `e_sqlite3.dll` 无法直接从单文件包内加载。解压到 `%TEMP%\.net\ClipNest\…`，后续启动复用。
 
 ## 许可证
 
