@@ -71,8 +71,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Root"
-                                Margin="6,1"
-                                Padding="10,7"
+                                Margin="4,1"
+                                Padding="8,4"
                                 Background="Transparent"
                                 BorderBrush="Transparent"
                                 BorderThickness="1"
@@ -218,7 +218,7 @@
                                  ItemContainerStyle="{StaticResource ClipItemStyle}"
                                  Background="Transparent"
                                  BorderThickness="0"
-                                 Padding="0,4"
+                                 Padding="0,2"
                                  HorizontalContentAlignment="Stretch"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -231,7 +231,7 @@
                             </ListBox.Resources>
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type vm:ClipRow}">
-                                    <Grid Height="38">
+                                    <Grid Height="30">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
@@ -240,12 +240,12 @@
                                         </Grid.ColumnDefinitions>
 
                                         <Border Grid.Column="0"
-                                                Width="22" Height="22"
+                                                Width="20" Height="20"
                                                 VerticalAlignment="Center"
                                                 Background="{DynamicResource AccentSoft}"
                                                 CornerRadius="5">
                                             <TextBlock Text="{Binding TypeGlyph}"
-                                                       FontSize="11"
+                                                       FontSize="10"
                                                        Foreground="{DynamicResource Accent}"
                                                        HorizontalAlignment="Center"
                                                        VerticalAlignment="Center" />

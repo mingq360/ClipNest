@@ -4,7 +4,7 @@
         xmlns:vm="clr-namespace:ClipNest.UI.ViewModels"
         xmlns:infra="clr-namespace:ClipNest.UI.Infrastructure"
         Title="{DynamicResource Str_PickerTitle}"
-        Width="436"
+        Width="372"
         SizeToContent="Height"
         MaxHeight="600"
         WindowStyle="None"
@@ -34,8 +34,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Root"
-                                Margin="6,1"
-                                Padding="9,6"
+                                Margin="4,1"
+                                Padding="8,5"
                                 Background="Transparent"
                                 BorderBrush="Transparent"
                                 BorderThickness="1"
