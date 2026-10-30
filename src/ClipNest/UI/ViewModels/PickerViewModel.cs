@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using ClipNest.Domain;
+using ClipNest.Infrastructure.Diagnostics;
 using ClipNest.UI.Infrastructure;
 
 namespace ClipNest.UI.ViewModels;
@@ -66,16 +67,28 @@ public sealed class PickerViewModel : ObservableObject, IDisposable
 
     public bool IsEmpty => Items.Count == 0;
 
+    /// <summary>
+    /// 重新拉取列表。
+    /// 失败必须自己兜住：这里被调用的时机是构造期间，异常一冒出去，整个历史菜单都弹不出来。
+    /// </summary>
     public void Reload()
     {
-        var rows = _repository.Query(new ClipQuery
+        try
         {
-            Text = SearchText,
-            Limit = MaxRows,
-        });
+            var rows = _repository.Query(new ClipQuery
+            {
+                Text = SearchText,
+                Limit = MaxRows,
+            });
 
-        Items.Clear();
-        foreach (var clip in rows) Items.Add(new ClipRow(clip));
+            Items.Clear();
+            foreach (var clip in rows) Items.Add(new ClipRow(clip));
+        }
+        catch (Exception ex)
+        {
+            Log.Error("历史菜单查询片段失败", ex);
+            Items.Clear();
+        }
 
         SelectedRow = Items.FirstOrDefault();
         OnPropertyChanged(nameof(IsEmpty));

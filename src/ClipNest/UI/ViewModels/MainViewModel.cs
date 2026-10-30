@@ -75,10 +75,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _clipService.PausedChanged += OnPausedChanged;
         IsPaused = _clipService.IsPaused;
 
-        if (_localization is not null) _localization.Changed += (_, _) => RefreshCultureStrings();
+        if (_localization is not null)
+        {
+            _localization.Changed += OnLanguageChanged;
+        }
 
         Reload();
     }
+
+    private void OnLanguageChanged(object? sender, EventArgs e) => RefreshCultureStrings();
 
     /// <summary>语言切换时刷新由代码维护的字符串（筛选标签、暂停按钮、状态栏等）。</summary>
     private void RefreshCultureStrings()
@@ -277,6 +282,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     /// <summary>
     /// 保存详情页的编辑：写回数据库、更新内存模型（复制/张贴立即用新内容），
     /// 并同步系统剪贴板。写入走 ClipboardWriter，回声抑制会避免被当成新片段重新收录。
+    ///
+    /// 改出的内容若与历史里<b>另一条</b>完全相同，保存会被拒绝并提示：
+    /// 指纹唯一索引不允许两个相同内容的条目共存。
     /// </summary>
     public void Save()
     {
@@ -284,8 +292,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (row is null || !IsDirty) return;
 
         var newContent = EditContent;
+
+        // 内容相同就意味着指纹相同，会撞上 content_hash 唯一索引。
+        // 提前查一次并给出明确原因，比让用户对着一句「保存失败」发呆好。
         try
         {
+            var hash = ContentFingerprint.Compute(newContent);
+            var existing = _repository.FindByHash(hash);
+
+            if (existing is not null && existing.Id != row.Id)
+            {
+                StatusText = Loc.Get("Str_SaveDuplicate");
+                return;
+            }
+
             if (!_repository.UpdateContent(row.Id, newContent))
             {
                 StatusText = Loc.Get("Str_SaveFailed");
@@ -435,5 +455,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _clipService.ClipSaved -= OnClipSaved;
         _clipService.Pruned -= OnPruned;
         _clipService.PausedChanged -= OnPausedChanged;
+
+        // 语言服务比视图模型活得久，不退订会把整个视图模型连同列表拖到进程结束
+        if (_localization is not null) _localization.Changed -= OnLanguageChanged;
     }
 }

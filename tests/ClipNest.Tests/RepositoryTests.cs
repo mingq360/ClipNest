@@ -245,6 +245,23 @@ public sealed class RepositoryTests : IDisposable
     }
 
     [Fact]
+    public void UpdateContent_ThenUpsertRefreshedModel_KeepsOneRow()
+    {
+        // 详情页改过内容之后，下一次「复制该条」会拿着内存模型再 Upsert 一次。
+        // 模型必须带上新指纹（对应 ClipRow.UpdateContent 那一步），否则 Upsert 会
+        // 以为是一条全新的内容，历史里凭空多一条重复项。
+        var id = _ctx.Add("original text");
+        _ctx.Repository.UpdateContent(id, "edited text");
+
+        var clip = _ctx.Repository.GetById(id)!;
+        clip.UpdatedAtMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _ctx.Repository.Upsert(clip);
+
+        Assert.Equal(1, _ctx.Repository.Count());
+        Assert.Equal("edited text", _ctx.Repository.GetById(id)!.Content);
+    }
+
+    [Fact]
     public void BoolColumns_RoundTrip()
     {
         var id = _ctx.Add("标记测试");

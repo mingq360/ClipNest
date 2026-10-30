@@ -10,7 +10,7 @@ offline, on your own disk, in a single SQLite file.
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?logo=windows11&logoColor=white)](#requirements)
 [![UI](https://img.shields.io/badge/UI-WPF-512BD4)](#)
-[![Tests](https://img.shields.io/badge/tests-77%20passing-2C7A6B)](#build--test)
+[![Tests](https://img.shields.io/badge/tests-87%20passing-2C7A6B)](#build--test)
 [![Network](https://img.shields.io/badge/network-0%20requests-2C7A6B)](#privacy)
 [![License](https://img.shields.io/badge/license-MIT-2C7A6B)](LICENSE)
 
@@ -46,14 +46,23 @@ snippet you copy, and gives it back to you in under a second.
 - **Pick and paste in place** — hit the second hotkey inside any app and a compact picker opens with
   your history. Choose an entry and it is pasted straight into the field you were typing in, no
   switching back to a manager window. This is the CLCL workflow people have missed for years.
+  The picker shows *without taking activation*: whatever you were typing keeps focus, so the caret,
+  the selection and any IME candidate window are never disturbed. It only grabs the keyboard once you
+  start typing, and hands focus back to the exact control you came from when it closes.
+- **Edit from the picker too** — hover any row and a pencil appears; click it to jump straight to the
+  main window with that entry selected and scrolled into view.
 - **Edit a snippet in place** — the detail pane is an editor, not just a preview. Fix a typo or trim a
-  block you copied, then hit **Save** (or `Ctrl+S` while the editor has focus): the history entry, the
-  on-disk record, and the system clipboard are all updated together, and your next paste uses the edited
-  text. **Back / Forward** buttons give you undo / redo while editing.
+  block you copied, then hit **Save** (or `Ctrl+S` from anywhere in the window while edits are pending):
+  the history entry, the on-disk record, and the system clipboard are all updated together, and your
+  next paste uses the edited text. **Back / Forward** buttons give you undo / redo while editing.
+  Editing a snippet into a duplicate of another entry is refused with a clear reason rather than a
+  bare "save failed".
+- **Switch language at any time** — Settings → Other → Language. Interface text, relative timestamps
+  and type labels switch live, no restart. English and Simplified Chinese are built in.
 - **Pinned and starred entries survive cleanup** — when the store hits its cap, the oldest
   *unprotected* entries go first. Your keepers don't.
-- **Light or dark, in your colour** — light by default, or follow the Windows setting. Six accent
-  colours, applied live without a restart.
+- **Switch between light and dark, in your colour** — light by default, or follow the Windows setting.
+  Six accent colours, applied live without a restart.
 
 ## Requirements
 
@@ -84,7 +93,9 @@ leave the home row.
 | `↑` `↓` | Move through results without leaving the search box |
 | `Enter` | Copy the selected snippet and hide |
 | `Ctrl+P` | Pin / unpin |
-| `Ctrl+S` | Star / unstar — **or save the edit when the detail editor has focus** |
+| `Ctrl+S` | **Save the edit** when there are unsaved changes (works anywhere in the window) — otherwise star / unstar |
+| `Ctrl+F` | Back to the search box |
+| `/` | Back to the search box (when it is empty) |
 | `Delete` | Delete the selected snippet (edits text normally while the detail editor has focus) |
 | `Esc` | Hide |
 
@@ -159,6 +170,8 @@ a firewall rule and watch it make zero connections.
 | Clipboard capture, history, search, copy-back | ✅ working |
 | Pin / star / delete / clear, capacity cleanup | ✅ working |
 | Edit a snippet in place (save / undo / redo) | ✅ working |
+| History picker (paste without stealing focus / hover-to-edit jump) | ✅ working |
+| Language switching (English / Simplified Chinese) | ✅ working |
 | Tray, global hotkeys, single instance, autostart | ✅ working |
 | Pause, denylist, first-run setup | ✅ working |
 | Tags, source filtering, import/export | ⬜ roadmap |
@@ -171,16 +184,20 @@ dotnet build ClipNest.sln
 dotnet test tests/ClipNest.Tests
 ```
 
-77 tests cover the repository layer, schema migrations, the classifier, the fingerprinting rules, and
-the capture orchestration (pause, denylist, dedupe, truncation, capacity pruning).
+87 tests cover the repository layer, schema migrations, the classifier, the fingerprinting rules, the
+capture orchestration (pause, denylist, dedupe, truncation, capacity pruning), plus two regression
+guards: the fingerprint must follow an edit, and hotkey failures must answer with a code, not a string.
 
 ```
 src/ClipNest/
 ├── Domain/           entities, classification, dedupe fingerprint, repository contract
-├── Services/         capture orchestration, settings, hotkey grammar
-├── Infrastructure/   SQLite, clipboard listener, foreground tracker, hotkeys, logging
-└── UI/               main window, settings, tray, view models
-tests/ClipNest.Tests/ 77 tests
+├── Services/         capture orchestration, settings, hotkey grammar and error codes
+├── Infrastructure/   SQLite, clipboard listener, foreground tracker, hotkeys, auto-start, logging
+└── UI/               main window, history picker, settings, tray
+                      ├─ Localization/  string resources and live language switching
+                      ├─ Theming/       theme and accent colour
+                      └─ ViewModels/    row model, main window, picker
+tests/ClipNest.Tests/ 87 tests
 docs/                  requirements and design docs (Chinese)
 ```
 

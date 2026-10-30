@@ -73,6 +73,15 @@
     <s:String x:Key="Str_ErrHotkeyToggle">唤起主窗口的快捷键无效：{0}</s:String>
     <s:String x:Key="Str_ErrHotkeyManual">主动收藏的快捷键无效：{0}</s:String>
     <s:String x:Key="Str_ErrHotkeySame">两个快捷键不能相同</s:String>
+
+    <!-- 快捷键错误明细：服务层只回错误码，文案由界面层按码取 -->
+    <s:String x:Key="Str_HotkeyErrEmpty">快捷键不能为空</s:String>
+    <s:String x:Key="Str_HotkeyErrModifier">全局快捷键至少需要一个修饰键（Ctrl / Alt / Shift / Win）</s:String>
+    <s:String x:Key="Str_HotkeyErrUnknownModifier">无法识别的修饰键：{0}</s:String>
+    <s:String x:Key="Str_HotkeyErrUnknownKey">无法识别的主键：{0}</s:String>
+    <s:String x:Key="Str_HotkeyErrNotBindable">按键 {0} 不能用作全局快捷键</s:String>
+    <s:String x:Key="Str_HotkeyErrTaken">快捷键 {0} 已被其他程序占用，请换一个</s:String>
+    <s:String x:Key="Str_HotkeyErrWin32">快捷键 {0} 注册失败（错误码 {1}）</s:String>
     <s:String x:Key="Str_ErrRange">{0} 需填 {1} ~ {2} 之间的整数，已还原为 {3}</s:String>
     <s:String x:Key="Str_ErrOpenFolder">打开数据目录失败</s:String>
     <s:String x:Key="Str_ClearTitle">清空未收藏的片段</s:String>
@@ -92,11 +101,10 @@
     <s:String x:Key="Str_Star">收藏</s:String>
     <s:String x:Key="Str_Delete">删除</s:String>
     <s:String x:Key="Str_Edit">修改</s:String>
-    <s:String x:Key="Str_Save">保存</s:String>
     <s:String x:Key="Str_SaveHint">保存 (Ctrl+S)</s:String>
     <s:String x:Key="Str_Back">后退</s:String>
     <s:String x:Key="Str_Forward">前进</s:String>
-    <s:String x:Key="Str_Source">来源</s:String>
+    <s:String x:Key="Str_SaveDuplicate">历史里已经有一条一模一样的内容，请先删掉那一条再保存</s:String>
     <s:String x:Key="Str_NoSelection">选中左侧任意片段即可预览全文</s:String>
     <s:String x:Key="Str_StatusBar">↑↓ 选择 · Enter 复制 · Esc 收起</s:String>
     <s:String x:Key="Str_TooltipSettings">设置</s:String>
@@ -104,6 +112,27 @@
     <s:String x:Key="Str_TooltipHide">隐藏窗口 (Esc)</s:String>
     <s:String x:Key="Str_TooltipPause">暂停采集</s:String>
     <s:String x:Key="Str_TooltipResume">恢复采集</s:String>
+
+    <!-- ============ 片段显示：类型 / 来源 / 相对时间 ============ -->
+    <s:String x:Key="Str_TypeText">文本</s:String>
+    <s:String x:Key="Str_TypeLink">链接</s:String>
+    <s:String x:Key="Str_TypeCode">代码</s:String>
+    <s:String x:Key="Str_TypeEmail">邮箱</s:String>
+    <s:String x:Key="Str_TypeNumber">数字</s:String>
+
+    <!-- 列表左侧类型角标，单个字符 -->
+    <s:String x:Key="Str_GlyphText">文</s:String>
+    <s:String x:Key="Str_GlyphLink">链</s:String>
+    <s:String x:Key="Str_GlyphCode">码</s:String>
+    <s:String x:Key="Str_GlyphEmail">@</s:String>
+    <s:String x:Key="Str_GlyphNumber">数</s:String>
+
+    <s:String x:Key="Str_UnknownSource">未知来源</s:String>
+    <s:String x:Key="Str_JustNow">刚刚</s:String>
+    <s:String x:Key="Str_MinutesAgo">{0} 分钟前</s:String>
+    <s:String x:Key="Str_Yesterday">昨天 {0:HH:mm}</s:String>
+    <s:String x:Key="Str_ThisYear">{0:M'月'd'日' HH:mm}</s:String>
+    <s:String x:Key="Str_FullDate">{0:yyyy'年'M'月'd'日'}</s:String>
 
     <!-- ============ 关于 ============ -->
     <s:String x:Key="Str_AboutTitle">关于 ClipNest</s:String>
@@ -124,7 +153,6 @@
     <s:String x:Key="Str_PickerTitle">ClipNest 历史</s:String>
     <s:String x:Key="Str_SearchHistory">搜索历史记录…</s:String>
     <s:String x:Key="Str_NoMatch">没有匹配的记录</s:String>
-    <s:String x:Key="Str_PickerHint">↑↓ 选择 · Enter 粘贴到刚才的窗口 · Esc 取消</s:String>
 
     <!-- ============ 托盘 ============ -->
     <s:String x:Key="Str_TrayTooltip">ClipNest · 剪贴板历史</s:String>

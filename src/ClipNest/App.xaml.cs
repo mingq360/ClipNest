@@ -11,6 +11,7 @@ using ClipNest.Infrastructure.HotKey;
 using ClipNest.Infrastructure.Native;
 using ClipNest.Services;
 using ClipNest.UI;
+using ClipNest.UI.Infrastructure;
 using ClipNest.UI.Localization;
 using ClipNest.UI.Theming;
 using ClipNest.UI.ViewModels;
@@ -212,18 +213,16 @@ public partial class App : Application
         var hotKeys = _settings.Current.HotKeys;
         var failures = new List<string>(2);
 
-        if (hotKeys.ToggleWindowEnabled
-            && !_hotKeys.TryRegister(HotKeyToggleWindow, hotKeys.ToggleWindow, ShowMainWindow, out var toggleError)
-            && toggleError is not null)
+        if (hotKeys.ToggleWindowEnabled)
         {
-            failures.Add(toggleError);
+            var result = _hotKeys.TryRegister(HotKeyToggleWindow, hotKeys.ToggleWindow, ShowMainWindow);
+            if (!result.Ok) failures.Add(HotKeyErrorText.Describe(result, hotKeys.ToggleWindow));
         }
 
-        if (hotKeys.ManualCaptureEnabled
-            && !_hotKeys.TryRegister(HotKeyManualCapture, hotKeys.ManualCapture, CaptureCurrentClipboard, out var captureError)
-            && captureError is not null)
+        if (hotKeys.ManualCaptureEnabled)
         {
-            failures.Add(captureError);
+            var result = _hotKeys.TryRegister(HotKeyManualCapture, hotKeys.ManualCapture, CaptureCurrentClipboard);
+            if (!result.Ok) failures.Add(HotKeyErrorText.Describe(result, hotKeys.ManualCapture));
         }
 
         var summary = failures.Count == 0 ? null : string.Join("；", failures);

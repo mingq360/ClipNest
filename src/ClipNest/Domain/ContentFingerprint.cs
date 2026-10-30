@@ -26,7 +26,13 @@ public static class ContentFingerprint
     public static string Normalize(string content)
         => content.Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd();
 
-    /// <summary>按最大字符数截断，避免超大文本撑爆索引。返回是否发生了截断。</summary>
+    /// <summary>
+    /// 按最大字符数截断，避免超大文本撑爆索引。返回是否发生了截断。
+    ///
+    /// 截断后会追加一段提示文字 —— 它会<b>跟着内容一起入库</b>。默认 MaxContentChars
+    /// （20 万字符）之内基本不会触发。注意：这段提示是简体中文的固定文本，
+    /// 领域层不适合引入界面语言依赖，属于已知取舍（见方案设计文档 §12.9）。
+    /// </summary>
     public static bool TryTruncate(string content, int maxChars, out string result)
     {
         if (maxChars <= 0 || content.Length <= maxChars)

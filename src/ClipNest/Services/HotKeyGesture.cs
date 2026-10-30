@@ -13,23 +13,27 @@ public static class HotKeyGesture
     public const int ModShift = 0x0004;
     public const int ModWin = 0x0008;
 
-    public static bool TryParse(string? text, out int modifiers, out int virtualKey, out string? error)
+    /// <summary>
+    /// 解析 "Ctrl+Alt+V" 这样的组合键。
+    /// </summary>
+    /// <param name="text">组合键文本。</param>
+    /// <param name="modifiers">成功时为修饰键位掩码。</param>
+    /// <param name="virtualKey">成功时为 Win32 虚拟键码。</param>
+    /// <returns>成功或失败原因（<b>不含界面文案</b>，界面层按语言取，见 HotKeyErrorText）。</returns>
+    public static HotKeyResult TryParse(string? text, out int modifiers, out int virtualKey)
     {
         modifiers = 0;
         virtualKey = 0;
-        error = null;
 
         if (string.IsNullOrWhiteSpace(text))
         {
-            error = "快捷键不能为空";
-            return false;
+            return HotKeyResult.Fail(HotKeyErrorKind.Empty);
         }
 
         var parts = text.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (parts.Length < 2)
         {
-            error = "全局快捷键至少需要一个修饰键（Ctrl / Alt / Shift / Win）";
-            return false;
+            return HotKeyResult.Fail(HotKeyErrorKind.MissingModifier);
         }
 
         var keyName = parts[^1];
@@ -52,31 +56,27 @@ public static class HotKeyGesture
                     modifiers |= ModWin;
                     break;
                 default:
-                    error = $"无法识别的修饰键：{parts[i]}";
-                    return false;
+                    return HotKeyResult.Fail(HotKeyErrorKind.UnknownModifier, parts[i]);
             }
         }
 
         if (modifiers == 0)
         {
-            error = "全局快捷键至少需要一个修饰键（Ctrl / Alt / Shift / Win）";
-            return false;
+            return HotKeyResult.Fail(HotKeyErrorKind.MissingModifier);
         }
 
         if (!TryParseKey(keyName, out var key))
         {
-            error = $"无法识别的主键：{keyName}";
-            return false;
+            return HotKeyResult.Fail(HotKeyErrorKind.UnknownKey, keyName);
         }
 
         virtualKey = KeyInterop.VirtualKeyFromKey(key);
         if (virtualKey == 0)
         {
-            error = $"按键 {keyName} 不能用作全局快捷键";
-            return false;
+            return HotKeyResult.Fail(HotKeyErrorKind.NotBindable, keyName);
         }
 
-        return true;
+        return HotKeyResult.Success();
     }
 
     public static string Format(int modifiers, int virtualKey)

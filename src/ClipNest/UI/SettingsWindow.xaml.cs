@@ -7,6 +7,7 @@ using ClipNest.Infrastructure.Data;
 using ClipNest.Infrastructure.Diagnostics;
 using ClipNest.Infrastructure.Startup;
 using ClipNest.Services;
+using ClipNest.UI.Infrastructure;
 using ClipNest.UI.Localization;
 using ClipNest.UI.Theming;
 
@@ -52,8 +53,9 @@ public partial class SettingsWindow : Window
         LoadFromSettings();
         ShowCurrentPage();
 
-        // 语言切换时刷新代码里写死的标题等（XAML 里的 DynamicResource 会自动更新）
-        _localization.Changed += (_, _) => RefreshLocalizedStrings();
+        // 语言切换时刷新代码里写死的标题等（XAML 里的 DynamicResource 会自动更新）。
+        // 委托要留成字段：关窗时必须退订，否则每次打开设置都泄漏一个窗口实例。
+        _localization.Changed += OnLanguageChanged;
 
         // 用 KeyDown（冒泡）而不是 PreviewKeyDown：快捷键录制框会先把 Esc 吃掉
         KeyDown += (_, e) =>
@@ -68,8 +70,12 @@ public partial class SettingsWindow : Window
             {
                 _settings.Update(s => s.FirstRunCompleted = true);
             }
+
+            _localization.Changed -= OnLanguageChanged;
         };
     }
+
+    private void OnLanguageChanged(object? sender, EventArgs e) => RefreshLocalizedStrings();
 
     /// <summary>刷新由代码写死的字符串（标题）。XAML 的 DynamicResource 会自动跟着语言变。</summary>
     private void RefreshLocalizedStrings()
@@ -248,17 +254,17 @@ public partial class SettingsWindow : Window
                     maxChars, Loc.Get("Str_MaxCharsLabel"), out maxChars)) return;
         }
 
-        if (ToggleHotKeyEnabled.IsChecked == true
-            && !HotKeyGesture.TryParse(ToggleGesture, out _, out _, out var toggleError))
+        var toggleResult = HotKeyGesture.TryParse(ToggleGesture, out _, out _);
+        if (ToggleHotKeyEnabled.IsChecked == true && !toggleResult.Ok)
         {
-            ShowError(Loc.Format("Str_ErrHotkeyToggle", toggleError));
+            ShowError(Loc.Format("Str_ErrHotkeyToggle", HotKeyErrorText.Describe(toggleResult, ToggleGesture)));
             return;
         }
 
-        if (ManualHotKeyEnabled.IsChecked == true
-            && !HotKeyGesture.TryParse(ManualGesture, out _, out _, out var captureError))
+        var manualResult = HotKeyGesture.TryParse(ManualGesture, out _, out _);
+        if (ManualHotKeyEnabled.IsChecked == true && !manualResult.Ok)
         {
-            ShowError(Loc.Format("Str_ErrHotkeyManual", captureError));
+            ShowError(Loc.Format("Str_ErrHotkeyManual", HotKeyErrorText.Describe(manualResult, ManualGesture)));
             return;
         }
 

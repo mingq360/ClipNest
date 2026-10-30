@@ -73,6 +73,15 @@
     <s:String x:Key="Str_ErrHotkeyToggle">Hotkey for the main window is invalid: {0}</s:String>
     <s:String x:Key="Str_ErrHotkeyManual">Hotkey for manual capture is invalid: {0}</s:String>
     <s:String x:Key="Str_ErrHotkeySame">The two hotkeys must be different</s:String>
+
+    <!-- Hotkey error details: services answer with a code, the UI layer picks the wording -->
+    <s:String x:Key="Str_HotkeyErrEmpty">Hotkey cannot be empty</s:String>
+    <s:String x:Key="Str_HotkeyErrModifier">A global hotkey needs at least one modifier (Ctrl / Alt / Shift / Win)</s:String>
+    <s:String x:Key="Str_HotkeyErrUnknownModifier">Unrecognised modifier: {0}</s:String>
+    <s:String x:Key="Str_HotkeyErrUnknownKey">Unrecognised key: {0}</s:String>
+    <s:String x:Key="Str_HotkeyErrNotBindable">{0} cannot be used as a global hotkey</s:String>
+    <s:String x:Key="Str_HotkeyErrTaken">{0} is already taken by another app — pick a different combo</s:String>
+    <s:String x:Key="Str_HotkeyErrWin32">Failed to register {0} (error code {1})</s:String>
     <s:String x:Key="Str_ErrRange">{0} must be an integer between {1} and {2}; reset to {3}</s:String>
     <s:String x:Key="Str_ErrOpenFolder">Could not open the data folder</s:String>
     <s:String x:Key="Str_ClearTitle">Clear unfavorited clips</s:String>
@@ -92,11 +101,10 @@ This cannot be undone. Continue?</s:String>
     <s:String x:Key="Str_Star">Favorite</s:String>
     <s:String x:Key="Str_Delete">Delete</s:String>
     <s:String x:Key="Str_Edit">Edit</s:String>
-    <s:String x:Key="Str_Save">Save</s:String>
     <s:String x:Key="Str_SaveHint">Save (Ctrl+S)</s:String>
     <s:String x:Key="Str_Back">Back</s:String>
     <s:String x:Key="Str_Forward">Forward</s:String>
-    <s:String x:Key="Str_Source">Source</s:String>
+    <s:String x:Key="Str_SaveDuplicate">An identical entry already exists in the history — delete it before saving</s:String>
     <s:String x:Key="Str_NoSelection">Select a clip on the left to preview it</s:String>
     <s:String x:Key="Str_StatusBar">↑↓ select · Enter copy · Esc hide</s:String>
     <s:String x:Key="Str_TooltipSettings">Settings</s:String>
@@ -104,6 +112,27 @@ This cannot be undone. Continue?</s:String>
     <s:String x:Key="Str_TooltipHide">Hide window (Esc)</s:String>
     <s:String x:Key="Str_TooltipPause">Pause capturing</s:String>
     <s:String x:Key="Str_TooltipResume">Resume capturing</s:String>
+
+    <!-- ============ Clip display: type / source / relative time ============ -->
+    <s:String x:Key="Str_TypeText">Text</s:String>
+    <s:String x:Key="Str_TypeLink">Link</s:String>
+    <s:String x:Key="Str_TypeCode">Code</s:String>
+    <s:String x:Key="Str_TypeEmail">Email</s:String>
+    <s:String x:Key="Str_TypeNumber">Number</s:String>
+
+    <!-- Single-character type badge on list rows -->
+    <s:String x:Key="Str_GlyphText">T</s:String>
+    <s:String x:Key="Str_GlyphLink">L</s:String>
+    <s:String x:Key="Str_GlyphCode">C</s:String>
+    <s:String x:Key="Str_GlyphEmail">@</s:String>
+    <s:String x:Key="Str_GlyphNumber">#</s:String>
+
+    <s:String x:Key="Str_UnknownSource">Unknown</s:String>
+    <s:String x:Key="Str_JustNow">Just now</s:String>
+    <s:String x:Key="Str_MinutesAgo">{0}m ago</s:String>
+    <s:String x:Key="Str_Yesterday">Yesterday {0:HH:mm}</s:String>
+    <s:String x:Key="Str_ThisYear">{0:MMM d HH:mm}</s:String>
+    <s:String x:Key="Str_FullDate">{0:MMM d, yyyy}</s:String>
 
     <!-- ============ About ============ -->
     <s:String x:Key="Str_AboutTitle">About ClipNest</s:String>
@@ -124,7 +153,6 @@ This cannot be undone. Continue?</s:String>
     <s:String x:Key="Str_PickerTitle">ClipNest History</s:String>
     <s:String x:Key="Str_SearchHistory">Search history…</s:String>
     <s:String x:Key="Str_NoMatch">No matching records</s:String>
-    <s:String x:Key="Str_PickerHint">↑↓ select · Enter paste to the previous window · Esc cancel</s:String>
 
     <!-- ============ Tray ============ -->
     <s:String x:Key="Str_TrayTooltip">ClipNest · Clipboard history</s:String>
