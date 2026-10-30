@@ -252,51 +252,37 @@
                                         </Border>
 
                                         <Grid Grid.Column="1" Margin="9,0,8,0" VerticalAlignment="Center">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
 
-                                            <Grid Grid.Row="0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{DynamicResource Str_PinnedTag}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource Accent}"
+                                                       Background="{DynamicResource AccentSoft}"
+                                                       Padding="4,0"
+                                                       Margin="0,0,4,0"
+                                                       VerticalAlignment="Center"
+                                                       Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Text="★"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource Accent}"
+                                                       Margin="0,0,4,0"
+                                                       VerticalAlignment="Center"
+                                                       Visibility="{Binding IsStarred, Converter={StaticResource BoolToVis}}" />
 
-                                                <TextBlock Grid.Column="0"
-                                                           Text="{DynamicResource Str_PinnedTag}"
-                                                           FontSize="10"
-                                                           Foreground="{DynamicResource Accent}"
-                                                           Background="{DynamicResource AccentSoft}"
-                                                           Padding="4,0"
-                                                           Margin="0,0,4,0"
-                                                           VerticalAlignment="Center"
-                                                           Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}" />
-                                                <TextBlock Grid.Column="1"
-                                                           Text="★"
-                                                           FontSize="10"
-                                                           Foreground="{DynamicResource Accent}"
-                                                           Margin="0,0,4,0"
-                                                           VerticalAlignment="Center"
-                                                           Visibility="{Binding IsStarred, Converter={StaticResource BoolToVis}}" />
-
-                                                <!-- 必须放在 * 列里才能正确省略：StackPanel 不约束子元素宽度，
-                                                     文字会一直画到时间列下面再被硬切 -->
-                                                <TextBlock Grid.Column="2"
-                                                           Text="{Binding Preview}"
-                                                           FontSize="12.5"
-                                                           Foreground="{DynamicResource TextPrimary}"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           VerticalAlignment="Center" />
-                                            </Grid>
-
-                                            <TextBlock Grid.Row="1"
-                                                       Text="{Binding MetaText}"
-                                                       Margin="0,1,0,0"
-                                                       FontSize="10.5"
-                                                       Foreground="{DynamicResource TextMuted}"
-                                                       TextTrimming="CharacterEllipsis" />
+                                            <!-- 必须放在 * 列里才能正确省略：StackPanel 不约束子元素宽度，
+                                                 文字会一直画到时间列下面再被硬切 -->
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Preview}"
+                                                       FontSize="12.5"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" />
                                         </Grid>
 
                                         <TextBlock Grid.Column="2"

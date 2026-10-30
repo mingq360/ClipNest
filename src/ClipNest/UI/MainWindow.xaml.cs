@@ -78,6 +78,22 @@ public partial class MainWindow : Window
         if (!string.IsNullOrEmpty(_viewModel.SearchText)) _viewModel.SearchText = string.Empty;
     }
 
+    /// <summary>从外部（如历史拾取器的「修改」图标）跳进来：定位到指定片段并居中显示。</summary>
+    public void ShowWithSelection(ClipRow? row)
+    {
+        // 重查一遍确保列表是最新的，并按 Id 选中该条
+        _viewModel.Reload(keepSelectionId: row?.Id);
+
+        ShowNearCursor();
+
+        if (_viewModel.SelectedRow is not null)
+        {
+            // 等布局完成再滚动，否则刚显示的虚拟列表还没准备好
+            Dispatcher.BeginInvoke(new Action(() => ClipList.ScrollIntoView(_viewModel.SelectedRow)),
+                System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+    }
+
     /// <summary>打开模态子窗口前调用，避免主窗口因为失焦被自动隐藏。</summary>
     public IDisposable SuppressAutoHide()
     {

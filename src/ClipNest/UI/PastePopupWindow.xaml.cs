@@ -55,6 +55,9 @@ public partial class PastePopupWindow : Window
 
     private bool _focusRestored;
 
+    /// <summary>点了「修改」按钮时置位：关闭时不再把焦点还给原窗口，而是交给即将打开的主窗口。</summary>
+    private bool _editRequested;
+
     // 钩子委托必须长期持有：传给 SetWindowsHookEx 的委托一旦被 GC 回收，回调就是野指针
     private readonly NativeMethods.HookProc _keyboardProc;
     private readonly NativeMethods.HookProc _mouseProc;
@@ -128,6 +131,9 @@ public partial class PastePopupWindow : Window
 
     /// <summary>用户选中了一条并已尝试粘贴。</summary>
     public event EventHandler? Pasted;
+
+    /// <summary>用户点了某条后面的「修改」图标：打开主窗口并定位到该条。</summary>
+    public event EventHandler<ClipRow>? EditRequested;
 
     /// <summary>
     /// 重复按快捷键时把窗口提到前面。
@@ -381,7 +387,7 @@ public partial class PastePopupWindow : Window
     /// <summary>只有抢过焦点才需要还原；无激活模式下目标窗口从未失去焦点。</summary>
     private void RestoreFocusIfNeeded()
     {
-        if (!_inputMode || _focusRestored) return;
+        if (!_inputMode || _focusRestored || _editRequested) return;
 
         _focusRestored = true;
         RestoreFocus();
@@ -481,11 +487,31 @@ public partial class PastePopupWindow : Window
 
         // 点在滚动条或空白处时找不到 ListBoxItem，按 DataContext 判定更稳
         if (e.OriginalSource is not DependencyObject source) return;
+
+        // 点在「修改」图标上时不粘贴，交给按钮自己的 Click 处理
+        if (FindAncestor<Button>(source) is not null) return;
+
         if (FindAncestor<ListBoxItem>(source)?.DataContext is not ClipRow row) return;
 
         _viewModel.SelectedRow = row;
         e.Handled = true;
         Commit();
+    }
+
+    /// <summary>点了某条后面的「修改」图标：通知外部打开主窗口并定位到这条，然后关掉自己。</summary>
+    private void OnEditClick(object sender, RoutedEventArgs e)
+    {
+        if (_closing) return;
+
+        // DataContext 是 ClipRow（按钮在 ListBoxItem 的 DataTemplate 里）
+        if (sender is not FrameworkElement fe || fe.DataContext is not ClipRow row) return;
+
+        e.Handled = true;
+        _editRequested = true;
+        EditRequested?.Invoke(this, row);
+
+        _closing = true;
+        Close();
     }
 
     private static T? FindAncestor<T>(DependencyObject? node) where T : DependencyObject

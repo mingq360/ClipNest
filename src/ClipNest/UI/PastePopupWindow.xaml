@@ -24,6 +24,9 @@
         <infra:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
         <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}" />
 
+        <!-- 修改（铅笔）：点它打开主窗口并定位到该条 -->
+        <Geometry x:Key="EditIconGeometry">M3,17.25 L14.5,5.75 L18.25,9.5 L6.75,21 L3,21 Z M14.5,5.75 L16.5,3.75 L20.25,7.5 L18.25,9.5 Z</Geometry>
+
         <Style x:Key="PickerItemStyle" TargetType="ListBoxItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Padding" Value="0" />
@@ -130,6 +133,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
                                         <Border Grid.Column="0"
@@ -157,6 +161,24 @@
                                                    FontSize="10"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Center" />
+
+                                        <!-- 修改：点它打开主窗口并选中这条 -->
+                                        <Button Grid.Column="3"
+                                                x:Name="EditButton"
+                                                Click="OnEditClick"
+                                                Width="22" Height="22"
+                                                Margin="6,0,0,0"
+                                                Padding="0"
+                                                ToolTip="{DynamicResource Str_Edit}"
+                                                Style="{StaticResource IconButton}">
+                                            <Path Data="{StaticResource EditIconGeometry}"
+                                                  Width="12" Height="12"
+                                                  Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="1.5"
+                                                  StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round" />
+                                        </Button>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

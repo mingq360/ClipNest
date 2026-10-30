@@ -316,6 +316,9 @@ public partial class App : Application
             _viewModel?.Reload();
         };
 
+        // 历史拾取器里点「修改」：打开主窗口并定位到该条
+        popup.EditRequested += (_, row) => _mainWindow?.ShowWithSelection(row);
+
         popup.Show();
     }
 

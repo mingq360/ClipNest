@@ -91,6 +91,7 @@
     <s:String x:Key="Str_Pin">置顶</s:String>
     <s:String x:Key="Str_Star">收藏</s:String>
     <s:String x:Key="Str_Delete">删除</s:String>
+    <s:String x:Key="Str_Edit">修改</s:String>
     <s:String x:Key="Str_Save">保存</s:String>
     <s:String x:Key="Str_SaveHint">保存 (Ctrl+S)</s:String>
     <s:String x:Key="Str_Back">后退</s:String>
