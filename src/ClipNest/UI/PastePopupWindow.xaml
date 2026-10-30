@@ -4,7 +4,7 @@
         xmlns:vm="clr-namespace:ClipNest.UI.ViewModels"
         xmlns:infra="clr-namespace:ClipNest.UI.Infrastructure"
         Title="{DynamicResource Str_PickerTitle}"
-        Width="372"
+        Width="320"
         SizeToContent="Height"
         MaxHeight="600"
         WindowStyle="None"
@@ -34,8 +34,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Root"
-                                Margin="4,1"
-                                Padding="8,5"
+                                Margin="2,0.5"
+                                Padding="6,3"
                                 Background="Transparent"
                                 BorderBrush="Transparent"
                                 BorderThickness="1"
@@ -76,7 +76,6 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <!-- 搜索 -->
@@ -108,8 +107,8 @@
                 <!-- 历史列表：高度跟着条目走，条目多到超过上限才滚动 -->
                 <Border Grid.Row="1"
                         Margin="12,0,12,0"
-                        MinHeight="110"
-                        MaxHeight="380"
+                        MinHeight="96"
+                        MaxHeight="360"
                         Background="{DynamicResource SurfaceBg}"
                         BorderBrush="{DynamicResource BorderSoft}"
                         BorderThickness="1"
@@ -121,14 +120,14 @@
                                  ItemContainerStyle="{StaticResource PickerItemStyle}"
                                  Background="Transparent"
                                  BorderThickness="0"
-                                 Padding="0,4"
+                                 Padding="0,2"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  VirtualizingStackPanel.IsVirtualizing="True"
                                  VirtualizingStackPanel.VirtualizationMode="Recycling">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type vm:ClipRow}">
-                                    <Grid Height="26">
+                                    <Grid Height="22">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
@@ -137,12 +136,12 @@
                                         </Grid.ColumnDefinitions>
 
                                         <Border Grid.Column="0"
-                                                Width="20" Height="20"
+                                                Width="18" Height="18"
                                                 VerticalAlignment="Center"
                                                 Background="{DynamicResource AccentSoft}"
-                                                CornerRadius="5">
+                                                CornerRadius="4">
                                             <TextBlock Text="{Binding TypeGlyph}"
-                                                       FontSize="10"
+                                                       FontSize="9.5"
                                                        Foreground="{DynamicResource Accent}"
                                                        HorizontalAlignment="Center"
                                                        VerticalAlignment="Center" />
@@ -150,27 +149,36 @@
 
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Preview}"
-                                                   Margin="8,0,6,0"
-                                                   FontSize="12.5"
+                                                   Margin="7,0,5,0"
+                                                   FontSize="12"
                                                    Foreground="{DynamicResource TextPrimary}"
                                                    TextTrimming="CharacterEllipsis"
                                                    VerticalAlignment="Center" />
 
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding TimeText}"
-                                                   FontSize="10"
+                                                   FontSize="9.5"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Center" />
 
-                                        <!-- 修改：点它打开主窗口并选中这条 -->
+                                        <!-- 修改：仅悬停该行时才显示，点它打开主窗口并选中这条 -->
                                         <Button Grid.Column="3"
                                                 x:Name="EditButton"
                                                 Click="OnEditClick"
                                                 Width="22" Height="22"
-                                                Margin="6,0,0,0"
+                                                Margin="5,0,0,0"
                                                 Padding="0"
-                                                ToolTip="{DynamicResource Str_Edit}"
-                                                Style="{StaticResource IconButton}">
+                                                ToolTip="{DynamicResource Str_Edit}">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                                    <Setter Property="Visibility" Value="Hidden" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
                                             <Path Data="{StaticResource EditIconGeometry}"
                                                   Width="12" Height="12"
                                                   Stretch="Uniform"
@@ -192,14 +200,6 @@
                                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
                     </Grid>
                 </Border>
-
-                <!-- 底部提示 -->
-                <Grid Grid.Row="2" Margin="14,9,14,11">
-                    <TextBlock Text="{DynamicResource Str_PickerHint}"
-                               FontSize="10.5"
-                               Foreground="{DynamicResource TextMuted}"
-                               VerticalAlignment="Center" />
-                </Grid>
             </Grid>
         </Border>
     </Grid>

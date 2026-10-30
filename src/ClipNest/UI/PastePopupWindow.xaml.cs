@@ -62,6 +62,9 @@ public partial class PastePopupWindow : Window
     private readonly NativeMethods.HookProc _keyboardProc;
     private readonly NativeMethods.HookProc _mouseProc;
 
+    /// <summary>窗口顶部相对鼠标指针下移的间隙，使弹窗出现在指针下方而非压在指针上。</summary>
+    private const int CursorVerticalOffset = 4;
+
     private IntPtr _keyboardHook;
     private IntPtr _mouseHook;
     private HwndSource? _source;
@@ -331,6 +334,7 @@ public partial class PastePopupWindow : Window
 
     /// <summary>
     /// 左上角落在鼠标位置（和右键菜单一致），并夹在鼠标所在的那个显示器里。
+    /// 顶部相对指针下移 <see cref="CursorVerticalOffset"/>，让弹窗出现在指针下方。
     ///
     /// 全程用物理像素，并且一致地用「光标所在显示器」的 DPI，这是多屏下不跑偏的关键：
     /// 窗口在创建的那一刻还挂在主屏上，WPF 的任何 DIP↔像素换算都会按主屏的缩放比去做，
@@ -349,12 +353,12 @@ public partial class PastePopupWindow : Window
 
             if (workArea.Width <= 0)
             {
-                NativeMethods.MoveWindowPixels(handle, cursor.X, cursor.Y);
+                NativeMethods.MoveWindowPixels(handle, cursor.X, cursor.Y + CursorVerticalOffset);
                 return;
             }
 
             var x = cursor.X;
-            var y = cursor.Y;
+            var y = cursor.Y + CursorVerticalOffset;
 
             // 高度是内容撑出来的，而且切到另一个缩放比的屏幕后尺寸还会变，
             // 这里按目标屏幕的缩放比预估一下，避免夹取时用了过期的尺寸
